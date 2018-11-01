@@ -5,7 +5,9 @@
 #include <Wire.h>               // I2C for RTC
 #include <SoftwareSerial.h>
 
-SoftwareSerial SoftSerial(10, 9); // RX, TX
+//SoftwareSerial SoftSerial(10, 9); // RX, TX
+// will use SoftSerial soon likely for POPS
+
 File root;
 String DataFname;
 bool GoodSD= true;
@@ -34,7 +36,7 @@ void setup() {
  Serial.println("<Arduino is ready>");
  Serial1.begin(38400);
  Serial2.begin(38400);
- SoftSerial.begin(9600);
+ //SoftSerial.begin(9600);
  inputString.reserve(200);
  CycleData.reserve(400);
 
@@ -296,15 +298,11 @@ void DoStuff() {
   Serial.println("In the Do Stuff!!!!!!!!!!!!!!!!!");
 }
 
-
-
-
 void ProcessMagC(String DataIn){
   CycleData+= DataIn;
   CycleData+= "\r\n";
   //Serial.println(DataIn);
 }
-
 
 String MakeTimeStr(long SecsIn) {
       long SecsOut;
