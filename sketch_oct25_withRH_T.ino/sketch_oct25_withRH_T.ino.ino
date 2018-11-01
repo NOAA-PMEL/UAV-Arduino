@@ -14,7 +14,7 @@
 //The RealTime Clock is at:
 //#define DS1307_RTC_ADDRESS 0x68 // DS1307 only has one I2C address - 0x68
 
-
+//This version did work
 
 // BME280 I2C address is 0x76(108)
 #define Addr 0x76
