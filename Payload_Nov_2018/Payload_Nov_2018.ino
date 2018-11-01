@@ -79,21 +79,11 @@ void loop() {
   static bool PollTime= false;
   static bool StatusTime=false;
  
+// Aerosol Payload on Serial2 is now read inside of serialEvent2()
   
-  //ReadSer0(); 
   ReadSer1();
- //ReadSer2();     // Aerosol Payload
-  //ReadSoftSer();
-
-//  if (alter == 1) { 
-//   alter =0;
-//   Poll= "Status";
-//   Poll.concat("\r\n");
-//   Serial2.print(Poll);
-//}
-
    
-  // End of the Second is here
+  // check clocks
   CT=millis();
   rtc.update(); 
 
@@ -102,64 +92,31 @@ void loop() {
     LastCT=CT;
     PollTime=true;
     StatusTime=true;
-    //set the digital output line
-
-        // if the LED is off turn it on and vice-versa:
+    
+    // change LED on output 13
     if (ledState == LOW) {
       ledState = HIGH;
     } else {
       ledState = LOW;
     }
-
-    // set the LED with the ledState of the variable:
     digitalWrite(ledPin, ledState);
 
-   // Now Poll the Aerosol Payload
-   //Poll= "Sample" + "\r\n";
-
-   
-//   alter =1;
-//   Poll= "Sample";
-//   Poll.concat("\r\n");
-//   Serial2.print(Poll);
-
-
-//   while (Serial2.available() == 0) { 
-//    // do nothing
-//   }
-//   ReadSer2();
-   
-   
-
-   //delay(50);
-   
-   //Poll= "Status";
-   //Poll.concat("\r\n");
-   //Serial2.print(Poll);
-   
-   
-    //printTime(); // Print the new time
     CycleData+= "RTC= " + MakeRTCstring() + "\r\n";
-    
     long s = rtc.second();
     long m = rtc.minute();
     long h = rtc.hour();
-   
     long RTCsecs= s + 60*m + 3600*h;
     
     Serial.print("RTCsecs= ");
-    Serial.println(RTCsecs);
-    
-    /* Serial.print("CT= ");
-    Serial.println(CT);
-    */
-    
+    Serial.println(RTCsecs);    
+    //Serial.print("CT= ");
+    //Serial.println(CT);
+     
     float CTsecs= CT/1000.0;
-    
     float diff= CTsecs + TimeOffset; 
     diff =diff - (float)RTCsecs;
+
     if (s == 0) {  // New Miniute: add file name and size to data record
-      
       CycleData+= "File=" + DataFname + "\n\r";
       dataFile = SD.open(DataFname, FILE_READ);
       unsigned long Fsize= dataFile.size();
@@ -173,12 +130,7 @@ void loop() {
       Dstring+= String(charD);
       sprintf(charD,"%02d", rtc.date());
       Dstring+= String(charD);
-      CycleData+= "Date=" + Dstring + "\n\r";
-    
-  //String strAA= "RTC TimeString= " + Tstring;
-  //Serial.println(strAA);
-  //printTime();
-        
+      CycleData+= "Date=" + Dstring + "\n\r";        
     }
     
     CycleData+= "Delta Time (secs) = " + String(diff,4) + "\n\r"; 
@@ -194,61 +146,29 @@ void loop() {
       dataFile.print(CycleDataMin);
       dataFile.close();
       lastMinute= m;
-      CycleDataMin="";
-    
+      CycleDataMin="";    
     }
-  } 
+  }   // this is the end of the Start new Second If statement
 
 
-if( PollTime && (CT - LastCT) > 400) {
-  // Now Poll 
-  PollTime=false;
-
-  
-   Poll= "Sample";
-   Poll.concat("\r\n");
-   Serial2.print(Poll);
-}
-
-if( StatusTime && (CT - LastCT) > 600) {
-  // Now Poll 
-  StatusTime=false;
-
-   Poll= "Status";
-   Poll.concat("\r\n");
-   Serial2.print(Poll);
-}
-
-
- 
-  /*
-  Remain= CT % 1000;
-  Delta= CT - LastCT;
-
-  if ((Remain <=  LastRemain) && (Delta > 100)) {
-     //Main Cycle Starts Here, Once every second
-    LastCT=CT;
-    LastRemain= Remain;
-    CurrTimeSecs= float(CT)/1000.0;
-    CTsecs= (long) CurrTimeSecs;
-    
-    CycleData+= "ARD= " +  MakeTimeStr(CTsecs + TimeOffset) + "\r\n";
-   
-    
-    // Read RTC clock
-    //rtc.update();
-    //printTime(); // Print the new time RTC
-    CycleData+= "RTC= " + MakeRTCstring() + "\r\n";
-
-    Serial.print(CycleData);
-    
-    dataFile = SD.open(DataFname, FILE_WRITE);
-    dataFile.print(CycleData);
-    dataFile.close();
-    CycleData="";
+  if( PollTime && (CT - LastCT) > 400) {
+    // Now Poll 
+    PollTime=false;
+    Poll= "Sample";
+    Poll.concat("\r\n");
+    Serial2.print(Poll);
   }
-  */
-}
+
+  if( StatusTime && (CT - LastCT) > 600) {
+
+  // Now Poll for Status 
+  StatusTime=false;
+  Poll= "Status";
+  Poll.concat("\r\n");
+  Serial2.print(Poll);
+  }  
+
+}    // This is the end of the "main" loop
 
 
 
@@ -287,21 +207,6 @@ void ReadSoftSer() {
 
 */
  
-//void ReadSer2() {  
-//  //Payload
-//  static String In ="";
-//  
-//  while (Serial2.available() > 0) { 
-//     char rc = Serial2.read();
-//     In += rc;
-//     //Serial.println(In);
-//     if (rc == '\n') {
-//      In.trim();
-//      ProcessMagC(In);
-//      In="";
-//    }
-//  }
-//}
 
 void serialEvent2() {
   //Serial.println("In the Event");
@@ -325,12 +230,6 @@ void serialEvent2() {
     }
   }
 }
-
-
-
-
-
-
 
 
 void ProcessSer1(String DataIn){
