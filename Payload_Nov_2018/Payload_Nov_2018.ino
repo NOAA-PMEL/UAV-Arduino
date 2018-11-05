@@ -143,7 +143,7 @@ void loop() {
     lastSecond = s; // Update lastSecond value
     
     //if (m != lastMinute)   // If the minute has changed, write to SD card
-    if ((s % 2) == 0 )    /now every even second
+    if ((s % 2) == 0 )    //now every even second
     {
       dataFile = SD.open(DataFname, FILE_WRITE);
       dataFile.print(CycleDataMin);
