@@ -120,9 +120,11 @@ void loop() {
 
     if (s == 0) {  // New Miniute: add file name and size to data record
       CycleData+= "File=" + DataFname + "\n\r";
+      Serial.print("File=" + DataFname + "\n\r");
       dataFile = SD.open(DataFname, FILE_READ);
       unsigned long Fsize= dataFile.size();
       CycleData+= "Fsize=" + String(Fsize) + "\n\r";
+      Serial.print("Fsize=" + String(Fsize) + "\n\r");
       dataFile.close();
       char charD[4];     // Now add Date Stamp
       String Dstring="";
@@ -132,12 +134,13 @@ void loop() {
       Dstring+= String(charD);
       sprintf(charD,"%02d", rtc.date());
       Dstring+= String(charD);
-      CycleData+= "Date=" + Dstring + "\n\r";        
+      CycleData+= "Date=" + Dstring + "\n\r";
+      Serial.print("Date=" + Dstring + "\n\r");       
     }
     
     CycleData+= "Delta Time (secs) = " + String(diff,4) + "\n\r"; 
     Serial1.print(CycleData);
-    Serial.print(CycleData);
+    //Serial.print(CycleData);
     DataCard+= CycleData;    //  for the one minute SD card write
     CycleData="";   
     lastSecond = s; // Update lastSecond value
