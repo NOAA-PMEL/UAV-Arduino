@@ -227,7 +227,7 @@ void serialEvent2() {
     // do something about it:
     if (inChar == '\r') {
       inputString.trim();
-      ProcessMagC(inputString);
+      ProcessPayL(inputString);
       inputString="";
       stringComplete = true;
     }
@@ -299,7 +299,7 @@ void DoStuff() {
   Serial.println("In the Do Stuff!!!!!!!!!!!!!!!!!");
 }
 
-void ProcessMagC(String DataIn){
+void ProcessPayL(String DataIn){
   CycleData+= DataIn;
   CycleData+= "\r\n";
   //Serial.println(DataIn);
