@@ -251,6 +251,11 @@ void ProcessSer1(String DataIn){
   Serial.print("test3= ");
   Serial.println(test3);
 
+  //Serial.println(DataIn.substring(0,1));
+
+  if (DataIn.substring(0,1) == "!" ) 
+  {
+
   int sw= 0;
   if (test3 == "!tt") {sw =  1;}
   if (test3 == "!rt") {sw =  2;}
@@ -285,9 +290,6 @@ void ProcessSer1(String DataIn){
           strSS=DataIn.substring(7,9);
           intSS= strSS.toInt();
 
-          //Serial.println(intHH);
-          //Serial.println(intMM);
-
           int day=  rtc.day();
           int date= rtc.date();
           int month=rtc.month();
@@ -298,10 +300,18 @@ void ProcessSer1(String DataIn){
       case 3: // test subroutine call
           DoStuff();
       break;
+  
   }
-
+ }
+ else 
+ {
+   // now pass on command to payload
+   DataIn= DataIn.trim();
+   Serial2.print(DataIn + "\n\r");  
+ }
 }
 
+}
 void DoStuff() {
   Serial.println("In the Do Stuff!!!!!!!!!!!!!!!!!");
 }
