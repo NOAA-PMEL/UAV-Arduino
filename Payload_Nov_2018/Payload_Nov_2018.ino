@@ -74,8 +74,8 @@ void loop() {
   long Delta;
   String strA="";
   static int8_t lastSecond = -1;
-  static int8_t lastMinute = -1;
-  static String CycleDataMin="";
+  //static int8_t lastMinute = -1;
+  static String DataCard="";
   String Poll="";
   static int alter=0;
   static bool PollTime= false;
@@ -138,7 +138,7 @@ void loop() {
     CycleData+= "Delta Time (secs) = " + String(diff,4) + "\n\r"; 
     Serial1.print(CycleData);
     Serial.print(CycleData);
-    CycleDataMin+= CycleData;    //  for the one minute SD card write
+    DataCard+= CycleData;    //  for the one minute SD card write
     CycleData="";   
     lastSecond = s; // Update lastSecond value
     
@@ -146,10 +146,10 @@ void loop() {
     if ((s % 2) == 0 )    //now every even second
     {
       dataFile = SD.open(DataFname, FILE_WRITE);
-      dataFile.print(CycleDataMin);
+      dataFile.print(DataCard);
       dataFile.close();
-      lastMinute= m;
-      CycleDataMin="";    
+      //lastMinute= m;
+      DataCard="";    
     }
   }   // this is the end of the Start new Second If statement
 
