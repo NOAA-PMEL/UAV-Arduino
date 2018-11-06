@@ -103,7 +103,8 @@ void loop() {
     }
     digitalWrite(ledPin, ledState);
 
-    CycleData+= "RTC= " + MakeRTCstring() + "\r\n";
+    //CycleData+= "RTC= " + MakeRTCstring() + "\r\n";
+    CycleData+= MakeRTCstring() + "\r\n";
     long s = rtc.second();
     long m = rtc.minute();
     long h = rtc.hour();
@@ -284,10 +285,13 @@ void ProcessSer1(String DataIn){
           strSS=DataIn.substring(7,9);
           intSS= strSS.toInt();
 
+          //Serial.println(intHH);
+          //Serial.println(intMM);
+
           int day=  rtc.day();
           int date= rtc.date();
           int month=rtc.month();
-          int year= rtc.year();
+          int year= rtc.year();          
           rtc.setTime(intSS, intMM, intHH, day, date, month, year);
         }
         break;
