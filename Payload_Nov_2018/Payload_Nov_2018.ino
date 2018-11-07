@@ -139,7 +139,7 @@ void loop() {
       Serial.print("Date=" + Dstring + "\n\r");       
     }
     
-    CycleData+= "Delta Time (secs) = " + String(diff,4) + "\n\r"; 
+    //CycleData+= "Delta Time (secs) = " + String(diff,4) + "\n\r"; 
     Serial1.print(CycleData);
     //Serial.print(CycleData);
     DataCard+= CycleData;    //  for the one minute SD card write
