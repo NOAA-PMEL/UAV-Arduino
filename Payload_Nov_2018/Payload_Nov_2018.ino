@@ -306,12 +306,14 @@ void ProcessSer1(String DataIn){
  else 
  {
    // now pass on command to payload
-   DataIn= DataIn.trim();
+   DataIn.trim();
    Serial2.print(DataIn + "\n\r");  
  }
-}
+
 
 }
+
+
 void DoStuff() {
   Serial.println("In the Do Stuff!!!!!!!!!!!!!!!!!");
 }
@@ -379,6 +381,7 @@ String MakeRTCstring() {
   return Tstring;
 }
   
+
 
 String FindNewFileName(File dir) {
   String Fname;
