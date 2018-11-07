@@ -254,64 +254,65 @@ void ProcessSer1(String DataIn){
   //Serial.println(DataIn.substring(0,1));
 
   if (DataIn.substring(0,1) == "!" ) 
-  {
-
-  int sw= 0;
-  if (test3 == "!tt") {sw =  1;}
-  if (test3 == "!rt") {sw =  2;}
-  if (test3 == "!33") {sw =  3;}
+    {
+    // This is for commands prefaced with "!" that
+    // are processed by the Arduino
+    
+    int sw= 0;
+    if (test3 == "!tt") {sw =  1;}
+    if (test3 == "!rt") {sw =  2;}
+    if (test3 == "!33") {sw =  3;}
+    
+    Serial.print("sw= ");
+    Serial.println(sw);
   
-  Serial.print("sw= ");
-  Serial.println(sw);
-
-  switch (sw) {
-      case 1:   //set internal clock
-        if (DataIn.length() >= 9) {
-          Serial.println("length good  ");
-          strHH=DataIn.substring(3,5);
-          intHH= strHH.toInt();    
-          strMM=DataIn.substring(5,7);
-          intMM= strMM.toInt();
-          strSS=DataIn.substring(7,9);
-          intSS= strSS.toInt();
-          TimeOffset=3600* (long) intHH + 60* (long) intMM + (long) intSS;
-          TimeOffset-= millis()/1000;
-          Serial.print("Offset1= ");
-          Serial.println(TimeOffset);
-        }
-        break;
-      case 2: //set real time clock
-        if (DataIn.length() >= 9) {
-          Serial.println("length good In RTC set ");
-          strHH=DataIn.substring(3,5);
-          intHH= strHH.toInt();    
-          strMM=DataIn.substring(5,7);
-          intMM= strMM.toInt();
-          strSS=DataIn.substring(7,9);
-          intSS= strSS.toInt();
-
-          int day=  rtc.day();
-          int date= rtc.date();
-          int month=rtc.month();
-          int year= rtc.year();          
-          rtc.setTime(intSS, intMM, intHH, day, date, month, year);
-        }
-        break;
-      case 3: // test subroutine call
-          DoStuff();
-      break;
+    switch (sw) {
+        case 1:   //set internal clock
+          if (DataIn.length() >= 9) {
+            Serial.println("length good  ");
+            strHH=DataIn.substring(3,5);
+            intHH= strHH.toInt();    
+            strMM=DataIn.substring(5,7);
+            intMM= strMM.toInt();
+            strSS=DataIn.substring(7,9);
+            intSS= strSS.toInt();
+            TimeOffset=3600* (long) intHH + 60* (long) intMM + (long) intSS;
+            TimeOffset-= millis()/1000;
+            Serial.print("Offset1= ");
+            Serial.println(TimeOffset);
+          }
+          break;
+        case 2: //set real time clock
+          if (DataIn.length() >= 9) {
+            Serial.println("length good In RTC set ");
+            strHH=DataIn.substring(3,5);
+            intHH= strHH.toInt();    
+            strMM=DataIn.substring(5,7);
+            intMM= strMM.toInt();
+            strSS=DataIn.substring(7,9);
+            intSS= strSS.toInt();
   
-  }
- }
- else 
- {
-   // now pass on command to payload
-   DataIn.trim();
-   Serial2.print(DataIn + "\n\r");  
- }
-
-
-}
+            int day=  rtc.day();
+            int date= rtc.date();
+            int month=rtc.month();
+            int year= rtc.year();          
+            rtc.setTime(intSS, intMM, intHH, day, date, month, year);
+          }
+          break;
+        case 3: // test subroutine call
+            DoStuff();
+        break;    
+    }   // end of "switch" code
+   }
+   else 
+   {
+     // These are commands that are not prefaced by  "!"
+     // All of these commands are passed on to the Payload
+     
+     DataIn.trim();
+     Serial2.print(DataIn + "\n\r");  
+   }
+}    // end of ProcessSer1()
 
 
 void DoStuff() {
