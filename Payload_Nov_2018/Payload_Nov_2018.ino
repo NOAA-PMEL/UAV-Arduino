@@ -104,7 +104,8 @@ void loop() {
     digitalWrite(ledPin, ledState);
 
     //CycleData+= "RTC= " + MakeRTCstring() + "\r\n";
-    CycleData+= MakeRTCstring() + "\r\n";
+    //CycleData+= MakeRTCstring() + "\r\n";
+    CycleData+= MakeRTCstring() + " ";
     long s = rtc.second();
     long m = rtc.minute();
     long h = rtc.hour();
@@ -322,6 +323,7 @@ void DoStuff() {
 void ProcessPayL(String DataIn){
   CycleData+= DataIn;
   CycleData+= "\r\n";
+  //CycleData+= "\n\r";
   //Serial.println(DataIn);
 }
 
