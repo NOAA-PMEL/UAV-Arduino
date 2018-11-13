@@ -205,9 +205,10 @@ void ReadSer3() {
   long testl=0;
   static String In ="";
   
-  while (Serial1.available() > 0) { 
-     rc = Serial1.read();
+  while (Serial3.available() > 0) { 
+     rc = Serial3.read();
      In += rc;
+     Serial.println(In);
      if (rc == '\n') {
       ProcessSer3(In);
       In="";
@@ -342,7 +343,7 @@ void ProcessSer1(String DataIn){
 
 
 void ProcessSer3(String DataIn){
-Serial.Print(DataIn)
+Serial.print(DataIn);
   
 }
 
