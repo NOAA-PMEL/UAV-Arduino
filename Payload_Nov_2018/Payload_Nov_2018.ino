@@ -36,6 +36,7 @@ void setup() {
  Serial.println("<Arduino is ready>");
  Serial1.begin(38400);
  Serial2.begin(38400);
+ Serial3.begin(9600);    // POPS
  //SoftSerial.begin(9600);
  inputString.reserve(200);
  CycleData.reserve(400);
@@ -84,6 +85,7 @@ void loop() {
 // Aerosol Payload on Serial2 is now read inside of serialEvent2()
   
   ReadSer1();
+  ReadSer3();
    
   // check clocks
   CT=millis();
@@ -195,6 +197,28 @@ void loop() {
     }
   }
 }
+
+// Serial3 is now POPS
+void ReadSer3() {
+  //static String In0="";
+  char rc;
+  long testl=0;
+  static String In ="";
+  
+  while (Serial1.available() > 0) { 
+     rc = Serial1.read();
+     In += rc;
+     if (rc == '\n') {
+      ProcessSer3(In);
+      In="";
+    }
+  }
+}
+
+
+
+
+
 
 /*
 void ReadSoftSer() {  
@@ -314,6 +338,14 @@ void ProcessSer1(String DataIn){
      Serial2.print(DataIn + "\n\r");  
    }
 }    // end of ProcessSer1()
+
+
+
+void ProcessSer1(String DataIn){
+Serial.Print(DataIn)
+  
+}
+
 
 
 void DoStuff() {
