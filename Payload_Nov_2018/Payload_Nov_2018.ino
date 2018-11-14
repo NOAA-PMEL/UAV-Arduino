@@ -33,6 +33,7 @@ String TString;
 long TimeOffset= 0;
 String CycleData = "";
 String inputString = "";
+String LastPOPS="";
 bool stringComplete = false;  // whether the string is complete
 int PayBytes=0;
 String Disp="";
@@ -46,6 +47,7 @@ void setup() {
  //SoftSerial.begin(9600);
  inputString.reserve(200);
  CycleData.reserve(600);
+ LastPOPS.reserve(120);
 
  pinMode(ledPin, OUTPUT);
  
@@ -86,6 +88,7 @@ void loop() {
   static int alter=0;
   static bool PollTime= false;
   static bool StatusTime=false;
+  static bool POPSTime=false;
  
 // Aerosol Payload on Serial2 is now read inside of serialEvent2()
   
@@ -101,6 +104,7 @@ void loop() {
     LastCT=CT;
     PollTime=true;
     StatusTime=true;
+    POPSTime=true;
     
     // change LED on output 13
     if (ledState == LOW) {
@@ -165,16 +169,16 @@ void loop() {
     }
   }   // this is the end of the Start new Second If statement
 
-
-  if( PollTime && (CT - LastCT) > 400) {
+  // the following was 400, now is 50
+  if( PollTime && (CT - LastCT) > 50) {
     // Now Poll 
     PollTime=false;
     Poll= "Sample";
     Poll.concat("\r\n");
     Serial2.print(Poll);
   }
-
-  if( StatusTime && (CT - LastCT) > 600) {
+  // the following was 600, now is 250
+  if( StatusTime && (CT - LastCT) > 250) {
 
   // Now Poll for Status 
   StatusTime=false;
@@ -182,6 +186,14 @@ void loop() {
   Poll.concat("\r\n");
   Serial2.print(Poll);
   }  
+
+   if( POPSTime && (CT - LastCT) > 500) {
+    POPSTime=false;
+    CycleData += LastPOPS;
+    LastPOPS=""; 
+   }
+
+
 
 }    // This is the end of the "main" loop
 
@@ -351,7 +363,8 @@ void ProcessSer1(String DataIn){
 
 void ProcessSer3(String DataIn){
 //Serial.print(DataIn);
-CycleData += "POP=" + DataIn;
+//CycleData += "POP=" + DataIn;
+LastPOPS= "POP=" + DataIn;
 }
 
 
