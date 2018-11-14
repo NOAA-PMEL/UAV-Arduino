@@ -211,8 +211,8 @@ void ReadSer3() {
      //Serial.println(In);
      //if ((rc == '\r') || (rc == '\n')) {
      if (rc == '\n') {
-      Serial.print(In);
-      //ProcessSer3(In);
+      //Serial.print(In);
+      ProcessSer3(In);
       In="";
     }
   }
@@ -346,7 +346,7 @@ void ProcessSer1(String DataIn){
 
 void ProcessSer3(String DataIn){
 //Serial.print(DataIn);
-  
+CycleData += "POP=" + DataIn;
 }
 
 
