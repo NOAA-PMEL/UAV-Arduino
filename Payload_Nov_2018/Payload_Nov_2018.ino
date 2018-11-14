@@ -8,6 +8,12 @@
 //SoftwareSerial SoftSerial(10, 9); // RX, TX
 // will use SoftSerial soon likely for POPS
 
+// Configuration for this 'setup'
+// Serial1 is to computer (to labview program on laptop
+// Serial2 is to payload
+// Serial3 is to POPS
+
+
 File root;
 String DataFname;
 bool GoodSD= true;
@@ -34,8 +40,8 @@ String Disp="";
 void setup() {
  Serial.begin(9600);
  Serial.println("<Arduino is ready>");
- Serial1.begin(38400);
- Serial2.begin(38400);
+ Serial1.begin(38400);   // to laptop
+ Serial2.begin(38400);   // to payload
  Serial3.begin(9600);    // POPS
  //SoftSerial.begin(9600);
  inputString.reserve(200);
@@ -64,7 +70,6 @@ void setup() {
     Serial.println("SD failed...........");
   }
 }
-
 
 
 void loop() {
