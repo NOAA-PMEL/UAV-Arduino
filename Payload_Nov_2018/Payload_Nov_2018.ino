@@ -45,7 +45,7 @@ void setup() {
  Serial3.begin(9600);    // POPS
  //SoftSerial.begin(9600);
  inputString.reserve(200);
- CycleData.reserve(400);
+ CycleData.reserve(600);
 
  pinMode(ledPin, OUTPUT);
  
@@ -128,12 +128,12 @@ void loop() {
     diff =diff - (float)RTCsecs;
 
     if (s == 0) {  // New Miniute: add file name and size to data record
-      CycleData+= "File=" + DataFname + "\n\r";
-      Serial.print("File=" + DataFname + "\n\r");
+      CycleData+= "File=" + DataFname + "\r\n";
+      Serial.print("File=" + DataFname + "\r\n");
       dataFile = SD.open(DataFname, FILE_READ);
       unsigned long Fsize= dataFile.size();
-      CycleData+= "Fsize=" + String(Fsize) + "\n\r";
-      Serial.print("Fsize=" + String(Fsize) + "\n\r");
+      CycleData+= "Fsize=" + String(Fsize) + "\r\n";
+      Serial.print("Fsize=" + String(Fsize) + "\r\n");
       dataFile.close();
       char charD[4];     // Now add Date Stamp
       String Dstring="";
@@ -143,11 +143,11 @@ void loop() {
       Dstring+= String(charD);
       sprintf(charD,"%02d", rtc.date());
       Dstring+= String(charD);
-      CycleData+= "Date=" + Dstring + "\n\r";
-      Serial.print("Date=" + Dstring + "\n\r");       
+      CycleData+= "Date=" + Dstring + "\r\n";
+      Serial.print("Date=" + Dstring + "\r\n");       
     }
     
-    //CycleData+= "Delta Time (secs) = " + String(diff,4) + "\n\r"; 
+    //CycleData+= "Delta Time (secs) = " + String(diff,4) + "\r\n"; 
     Serial1.print(CycleData);
     //Serial.print(CycleData);
     DataCard+= CycleData;    //  for the one minute SD card write
@@ -343,7 +343,7 @@ void ProcessSer1(String DataIn){
      // All of these commands are passed on to the Payload
      
      DataIn.trim();
-     Serial2.print(DataIn + "\n\r");  
+     Serial2.print(DataIn + "\r\n");  
    }
 }    // end of ProcessSer1()
 
