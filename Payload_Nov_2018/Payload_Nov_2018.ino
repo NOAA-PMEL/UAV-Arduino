@@ -5,13 +5,14 @@
 #include <Wire.h>               // I2C for RTC
 #include <SoftwareSerial.h>
 
-//SoftwareSerial SoftSerial(10, 9); // RX, TX
-// will use SoftSerial soon likely for POPS
+SoftwareSerial SoftSerial(10, 9); // RX, TX
+// 
 
 // Configuration for this 'setup'
 // Serial1 is to computer (to labview program on laptop
 // Serial2 is to payload
 // Serial3 is to POPS
+// SoftSerial is to the HC2 temp, rh sensor
 
 
 File root;
