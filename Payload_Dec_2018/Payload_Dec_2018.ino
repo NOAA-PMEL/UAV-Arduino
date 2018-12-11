@@ -45,6 +45,8 @@ void setup() {
  Serial1.begin(38400);   // to laptop
  Serial2.begin(38400);   // to payload
  Serial3.begin(9600);    // POPS
+ SoftSerial.begin(19200); // HC2 t,rh probe
+ 
  //SoftSerial.begin(9600);
  inputString.reserve(200);
  CycleData.reserve(600);
@@ -90,11 +92,13 @@ void loop() {
   static bool PollTime= false;
   static bool StatusTime=false;
   static bool POPSTime=false;
+  static bool HC2Time=false;
  
 // Aerosol Payload on Serial2 is now read inside of serialEvent2()
   
   ReadSer1();
   ReadSer3();
+  ReadSoftSer();
    
   // check clocks
   CT=millis();
@@ -106,6 +110,7 @@ void loop() {
     PollTime=true;
     StatusTime=true;
     POPSTime=true;
+    HC2Time=true;
     
     // change LED on output 13
     if (ledState == LOW) {
@@ -188,6 +193,15 @@ void loop() {
   Serial2.print(Poll);
   }  
 
+if ( HC2Time && (CT - LastCT) > 325) {
+  // Now poll the HydroClip2 t,rh probe
+  String PollHC2 = "{ 99RDD}\r";
+  SoftSerial.print(PollHC2);
+  HC2Time= false;
+  
+}
+
+
    if( POPSTime && (CT - LastCT) > 500) {
     POPSTime=false;
     CycleData += LastPOPS;
@@ -237,8 +251,60 @@ void ReadSer3() {
 }
 
 
+void ReadSoftSer() {
+  //static String In0="";
+  char rc;
+  long testl=0;
+  static String In ="";
+  
+  while (SoftSerial.available() > 0) { 
+     rc = SoftSerial.read();
+     In += rc;
+     if (rc == '\r') {     
+      //Serial.println(In);
+      ProcessHC2(In);
+      In="";
+     }  
+  }  
+ }
 
+void ProcessHC2(String sLine) {
+//Serial.println("sLine is-> " + sLine);
+//String sParams[5];
+int iCount, i;
+//String sLine;
+char aa = ';';
 
+String AirT = getValue(sLine, aa, 5);
+AirT.trim();
+//Serial.println(AirT);
+
+String RH = getValue(sLine, aa, 1);
+RH.trim();
+//Serial.println(RH);
+
+String Outline="RH=" + RH + " " + "AT=" + AirT + "\r\n";
+Serial.print(Outline);
+
+ CycleData+= Outline;
+
+}
+
+String getValue(String data, char separator, int index)
+{
+    int found = 0;
+    int strIndex[] = { 0, -1 };
+    int maxIndex = data.length() - 1;
+
+    for (int i = 0; i <= maxIndex && found <= index; i++) {
+        if (data.charAt(i) == separator || i == maxIndex) {
+            found++;
+            strIndex[0] = strIndex[1] + 1;
+            strIndex[1] = (i == maxIndex) ? i+1 : i;
+        }
+    }
+    return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
 
 
 /*
