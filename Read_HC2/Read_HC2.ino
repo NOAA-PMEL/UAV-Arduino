@@ -58,11 +58,11 @@ int iCount, i;
 //String sLine;
 char aa = ';';
 
-String AirT = getValue(sLine, aa, 1);
+String AirT = getValue(sLine, aa, 5);
 AirT.trim();
 //Serial.println(AirT);
 
-String RH = getValue(sLine, aa, 5);
+String RH = getValue(sLine, aa, 1);
 RH.trim();
 //Serial.println(RH);
 
