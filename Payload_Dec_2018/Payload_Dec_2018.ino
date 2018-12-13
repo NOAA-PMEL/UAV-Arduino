@@ -354,7 +354,10 @@ void serialEvent2() {
 void ProcessSer1(String DataIn){
   String test3="";
   String strHH="", strMM="", strSS="";
+  String strDOM="", strDay="", strMonth="", strYYYY=""; 
   int intHH=0, intMM=0, intSS=0;
+  int intY=0, intDOM=0, intDay=0, intMonth=0; 
+  
   long Offset1=0;
 
   Serial.print("A Line!!!  ");
@@ -373,7 +376,7 @@ void ProcessSer1(String DataIn){
     int sw= 0;
     if (test3 == "!tt") {sw =  1;}
     if (test3 == "!rt") {sw =  2;}
-    if (test3 == "!33") {sw =  3;}
+    if (test3 == "!rd") {sw =  3;}
     
     Serial.print("sw= ");
     Serial.println(sw);
@@ -412,7 +415,50 @@ void ProcessSer1(String DataIn){
           }
           break;
         case 3: // test subroutine call
-            DoStuff();
+            //DoStuff();
+          //Command is !rd201812113  Last digit is day of week 3=Tuesday
+          //  The above date is Dec 11, 2018  (Tuesday)
+          
+         if (DataIn.length() >= 9) {
+          Serial.println("length good In RTC set ");
+          strYYYY=DataIn.substring(3,7);
+          intY= strYYYY.toInt() - 2000;    
+          strMonth=DataIn.substring(7,9);
+          
+          intMonth= strMonth.toInt();
+          strDOM=DataIn.substring(9,11);
+          intDOM= strDOM.toInt();
+          strDay=DataIn.substring(11,12);
+          intDay= strDay.toInt();
+ 
+          int s= rtc.second();
+          int m=rtc.minute();
+          int h= rtc.hour();
+
+//          Serial.print("Day= ");
+//          Serial.println(intDay);
+//          Serial.print("DOM= ");
+//          Serial.println(intDOM);
+//          Serial.print("month= ");
+//          Serial.println(intMonth);
+//          Serial.print("year= ");
+//          Serial.println(intY);
+//          
+                             
+          rtc.setTime(s, m, h, intDay, intDOM, intMonth, intY);
+        } 
+
+
+
+
+
+
+
+
+
+
+
+            
         break;    
     }   // end of "switch" code
    }
@@ -434,11 +480,6 @@ void ProcessSer3(String DataIn){
 LastPOPS= "POP=" + DataIn;
 }
 
-
-
-void DoStuff() {
-  Serial.println("In the Do Stuff!!!!!!!!!!!!!!!!!");
-}
 
 void ProcessPayL(String DataIn){
   CycleData+= DataIn;
