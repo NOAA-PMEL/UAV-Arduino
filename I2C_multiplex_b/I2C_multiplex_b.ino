@@ -27,6 +27,10 @@ void setup() {
   
   pinMode(ledPin1, OUTPUT);
   //pinMode(ledPin2, OUTPUT);
+
+  pinMode(A2, OUTPUT);     
+  digitalWrite(A2, HIGH);   // I2C socket power on
+
   
   Serial.begin(9600);
 
@@ -34,7 +38,7 @@ void setup() {
     delay(10);     // will pause Zero, Leonardo, etc until serial console opens
  
  rtc.begin(); // Call rtc.begin() to initialize the library
- tcaselect(2);
+ tcaselect(0);
  
  Serial.println("SHT31 (2) test");
   if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
@@ -42,7 +46,7 @@ void setup() {
     while (1) delay(1);
   }
 
-  tcaselect(7);
+  tcaselect(1);
   Serial.println("SHT31 (7) test");
   if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
     Serial.println("Couldn't find SHT31");
@@ -77,19 +81,19 @@ void loop() {
    //digitalWrite(ledPin1, ledState);
    //digitalWrite(ledPin2, ledState);
 
-  tcaselect(2);
+  tcaselect(0);
   float t2 = sht31.readTemperature();
   float h2 = sht31.readHumidity();
-  tcaselect(7);
+  tcaselect(1);
   float t7 = sht31.readTemperature();
   float h7 = sht31.readHumidity();
   
-  Serial.print("Temps  2   7:   ");
+  Serial.print("Temps  1   2:   ");
   Serial.print(t2);
   Serial.print("    ");
   Serial.println(t7);
   
-  Serial.print("RH     2   7:   ");
+  Serial.print("RH     1   2:   ");
   Serial.print(h2);
   Serial.print("    ");
   Serial.println(h7);
