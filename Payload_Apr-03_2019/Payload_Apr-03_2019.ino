@@ -40,6 +40,9 @@ bool stringComplete = false;  // whether the string is complete
 int PayBytes=0;
 int POPSbytes=0;
 String Disp="";
+int B2=0;
+int B3=0;
+int B4=0;
 
 void setup() {
  Serial.begin(9600);
@@ -138,6 +141,12 @@ void loop() {
     float CTsecs= CT/1000.0;
     float diff= CTsecs + TimeOffset; 
     diff =diff - (float)RTCsecs;
+    
+    CycleData += "B2=" + String(B2) + " B3=" + String(B3) + " B4=" + String(B4) + "\r\n";
+    B2=0;
+    B3=0;
+    B4=0;
+    
 
     if (s == 0) {  // New Miniute: add file name and size to data record
       CycleData+= "File=" + DataFname + "\r\n";
@@ -253,22 +262,51 @@ if ( HC2Time && (CT - LastCT) > 325) {
 //}
 //
 
+//void ReadSoftSer() {
+//  //static String In0="";
+//  char rc;
+//  long testl=0;
+//  static String In ="";
+//  
+//  while (SoftSerial.available() > 0) { 
+//     rc = SoftSerial.read();
+//     In += rc;
+//     if (rc == '\r') {     
+//      Serial.println(In);
+//      ProcessHC2(In);
+//      In="";
+//     }  
+//  }  
+// }
+
 void ReadSoftSer() {
-  //static String In0="";
-  char rc;
-  long testl=0;
-  static String In ="";
-  
-  while (SoftSerial.available() > 0) { 
-     rc = SoftSerial.read();
-     In += rc;
-     if (rc == '\r') {     
-      //Serial.println(In);
-      ProcessHC2(In);
-      In="";
-     }  
-  }  
- }
+  static uint8_t ii=0;
+  static char buff[160];
+
+    while (SoftSerial.available()) {
+      int Avail=SoftSerial.available();
+      if (Avail > B4) {
+        B4= Avail;
+      }
+     
+    char inChar= (char)SoftSerial.read();
+    if (inChar == '\r' || ii >= 159 )  {
+      buff[ii]=0;
+      String HC2= String(buff);
+      //PayOut.trim();
+      ProcessHC2(HC2);
+      //ProcessPayL(PayOut);
+      ii=0;      
+    } else {
+      buff[ii] = inChar;
+      ii++;
+    }
+  }
+}
+
+
+
+
 
 void ProcessHC2(String sLine) {
 //Serial.println("sLine is-> " + sLine);
@@ -335,15 +373,19 @@ String getValue(String data, char separator, int index)
 // New Payload Reader with mostly char
 
 void serialEvent2() {
-  static unint8_t ii=0;
+  static uint8_t ii=0;
   static char buff[160];
   while (Serial2.available()) {
+    int Avail=Serial2.available();
+    if (Avail > B2) {
+        B2= Avail;
+    }
     char inChar= (char)Serial2.read();
     if (inChar == '\r' || ii >= 159 )  {
       buff[ii]=0;
       String PayOut= String(buff);
-      Payout.trim();
-      ProcessPayL(Payout);
+      PayOut.trim();
+      ProcessPayL(PayOut);
       ii=0;      
     } else {
       buff[ii] = inChar;
@@ -354,28 +396,58 @@ void serialEvent2() {
 
 
 
-// POPS
-void serialEvent3() {
-  //Serial.println("In the Event");
-  POPSbytes=Serial3.available();
-  //Disp="Bytes= " + String(PayBytes);
-  //Serial.println(Disp);
+// //POPS
+//void serialEvent3() {
+//  //Serial.println("In the Event");
+//  POPSbytes=Serial3.available();
+//  //Disp="Bytes= " + String(PayBytes);
+//  //Serial.println(Disp);
+//  while (Serial3.available()) {
+// 
+//    char inChar = (char)Serial3.read();
+//    // add it to the inputString:
+//    inputStringPOPS += inChar;
+//    // if the incoming character is a newline, set a flag so the main loop can
+//    // do something about it:
+//    if (inChar == '\n') {
+//      inputStringPOPS.trim();
+//      //ProcessPayL(inputString);
+//      ProcessSer3(inputStringPOPS + "\r\n");
+//      inputStringPOPS="";
+//      //stringComplete = true;
+//    }
+//  }
+//}
+////
+
+
+//POPS
+void serialEvent3(){
+  static uint8_t ii=0;
+  static char buff[160];
+  
   while (Serial3.available()) {
- 
-    char inChar = (char)Serial3.read();
-    // add it to the inputString:
-    inputStringPOPS += inChar;
-    // if the incoming character is a newline, set a flag so the main loop can
-    // do something about it:
-    if (inChar == '\n') {
-      inputStringPOPS.trim();
-      //ProcessPayL(inputString);
-      ProcessSer3(inputStringPOPS);
-      inputStringPOPS="";
-      //stringComplete = true;
+    int Avail=Serial3.available();
+    if (Avail > B3) {
+      B3= Avail;
+    }
+    char inChar= (char)Serial3.read();
+    if (inChar == '\n' || ii >= 159 )  {
+      buff[ii]=0;
+      String POPSOut= String(buff);
+      POPSOut.trim();
+      //Serial.println(POPSOut);
+      ProcessSer3(POPSOut + "\r\n");
+      ii=0;      
+    } else {
+      buff[ii] = inChar;
+      //Serial.print(inChar);
+      ii++;
     }
   }
 }
+
+
 
 
 void ProcessSer1(String DataIn){

@@ -336,19 +336,21 @@ void serialEvent2() {
 void serialEvent3() {
   //Serial.println("In the Event");
   POPSbytes=Serial3.available();
+  //CycleData += "POPSbytes="+String(POPSbytes) + "\r\n";
+  
   //Disp="Bytes= " + String(PayBytes);
   //Serial.println(Disp);
   while (Serial3.available()) {
  
-    char inChar = (char)Serial3.read();
+    char inCharPOPS = (char)Serial3.read();
     // add it to the inputString:
-    inputStringPOPS += inChar;
+    inputStringPOPS += inCharPOPS;
     // if the incoming character is a newline, set a flag so the main loop can
     // do something about it:
-    if (inChar == '\n') {
+    if (inCharPOPS == '\n') {
       inputStringPOPS.trim();
       //ProcessPayL(inputString);
-      ProcessSer3(inputStringPOPS);
+      ProcessSer3(inputStringPOPS + "\r\n");
       inputStringPOPS="";
       //stringComplete = true;
     }
