@@ -50,6 +50,7 @@ String Disp="";
 int B2=0;
 int B3=0;
 int B4=0;
+bool I2C_T_RH=true;  // set this to false to turn off I2C T-RH
 
 void setup() {
  Serial.begin(9600);
@@ -86,20 +87,22 @@ void setup() {
   } else {
     Serial.println("SD failed...........");
   }
- 
- tcaselect(1);
- Serial.println("SHT31 (2) test");
-  if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
-    Serial.println("Couldn't find SHT31");
-    while (1) delay(1);
-  }
 
-  tcaselect(2);
-  Serial.println("SHT31 (7) test");
-  if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
-    Serial.println("Couldn't find SHT31");
-    while (1) delay(1);
-  }
+ if (I2C_T_RH) {
+   tcaselect(1);
+   Serial.println("SHT31 (2) test");
+    if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
+      Serial.println("Couldn't find SHT31");
+      while (1) delay(1);
+    }
+    tcaselect(2);
+    Serial.println("SHT31 (7) test");
+    if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
+      Serial.println("Couldn't find SHT31");
+      while (1) delay(1);
+    }
+ }
+
 }
 
 void tcaselect(uint8_t i) {
@@ -250,47 +253,49 @@ if ( HC2Time && (CT - LastCT) > 325) {
 }
 
 
-   if( POPSTime && (CT - LastCT) > 500) {
-    POPSTime=false;
-    CycleData += LastPOPS;
-    LastPOPS=""; 
+   if (I2C_T_RH) {
+
+     if( POPSTime && (CT - LastCT) > 500) {
+      POPSTime=false;
+      CycleData += LastPOPS;
+      LastPOPS=""; 
+     }
+     
+     if ( PSAP_T_time && (CT - LastCT) > 700){
+      PSAP_T_time=false;
+      tcaselect(1);
+      float PSAP_t= sht31.readTemperature();
+      String sPSAP_t= String(PSAP_t);
+      Serial.println("PSAP-T= " + sPSAP_t);
+      }
+  
+     if ( PSAP_RH_time && (CT - LastCT) > 760){
+      PSAP_RH_time=false;
+      tcaselect(1);
+      float PSAP_rh= sht31.readHumidity();
+      String sPSAP_rh= String(PSAP_rh);
+      Serial.println("PSAP-RH= " + sPSAP_rh);
+      }
+  
+  
+     if ( POPS_RH_time && (CT - LastCT) > 820){
+      POPS_RH_time=false;
+      tcaselect(2);
+      float POPS_t= sht31.readTemperature();
+      String sPOPS_t= String(POPS_t);
+      Serial.println("POPS-T= " + sPOPS_t);
+      }
+  
+  
+     if ( POPS_RH_time && (CT - LastCT) > 880){
+      POPS_RH_time=false;
+      tcaselect(2);
+      float POPS_rh= sht31.readHumidity();
+      String sPOPS_rh= String(POPS_rh);
+      Serial.println("POPS-RH= " + sPOPS_rh);
+      }
+
    }
-   
-   if ( PSAP_T_time && (CT - LastCT) > 700){
-    PSAP_T_time=false;
-    tcaselect(1);
-    float PSAP_t= sht31.readTemperature();
-    String sPSAP_t= String(PSAP_t);
-    Serial.println("PSAP-T= " + sPSAP_t);
-    }
-
-   if ( PSAP_RH_time && (CT - LastCT) > 760){
-    PSAP_RH_time=false;
-    tcaselect(1);
-    float PSAP_rh= sht31.readHumidity();
-    String sPSAP_rh= String(PSAP_rh);
-    Serial.println("PSAP-RH= " + sPSAP_rh);
-    }
-
-
-   if ( POPS_RH_time && (CT - LastCT) > 820){
-    POPS_RH_time=false;
-    tcaselect(2);
-    float POPS_t= sht31.readTemperature();
-    String sPOPS_t= String(POPS_t);
-    Serial.println("POPS-T= " + sPOPS_t);
-    }
-
-
-   if ( POPS_RH_time && (CT - LastCT) > 880){
-    POPS_RH_time=false;
-    tcaselect(2);
-    float POPS_rh= sht31.readHumidity();
-    String sPOPS_rh= String(POPS_rh);
-    Serial.println("POPS-RH= " + sPOPS_rh);
-    }
-
-
 
 
 
