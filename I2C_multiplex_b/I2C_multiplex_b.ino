@@ -1,3 +1,5 @@
+
+
 //   This program uses the Adafruit TCA9548A I2C multiplexer
 //   The Multiplexer address is:  0x70
 //   The subroutine tcaselect( int )  will switch among the 8 I2C connections to
@@ -22,6 +24,12 @@ const int ledPin1 = 11;
 
 int ledState= LOW;
 
+unsigned long tt1;
+unsigned long tt2;
+unsigned long ts1;
+unsigned long ts2;
+unsigned long tr1;
+unsigned long tr2;
 
 void setup() {
   
@@ -38,7 +46,7 @@ void setup() {
     delay(10);     // will pause Zero, Leonardo, etc until serial console opens
  
  rtc.begin(); // Call rtc.begin() to initialize the library
- tcaselect(0);
+ tcaselect(1);
  
  Serial.println("SHT31 (2) test");
   if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
@@ -46,7 +54,7 @@ void setup() {
     while (1) delay(1);
   }
 
-  tcaselect(1);
+  tcaselect(2);
   Serial.println("SHT31 (7) test");
   if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
     Serial.println("Couldn't find SHT31");
@@ -64,7 +72,7 @@ void tcaselect(uint8_t i) {
 
 
 void loop() {
-
+  //tt1=millis();
   rtc.update();  
   Serial.print("Second is: ");
   Serial.println(rtc.second());
@@ -80,13 +88,24 @@ void loop() {
    }
    //digitalWrite(ledPin1, ledState);
    //digitalWrite(ledPin2, ledState);
-
-  tcaselect(0);
-  float t2 = sht31.readTemperature();
-  float h2 = sht31.readHumidity();
+  tt1 = millis();
+  ts1=millis();
   tcaselect(1);
+  ts2=millis();
+  tr1=millis();
+  float t2 = sht31.readTemperature();
+  tr2=millis();
+  float h2 = sht31.readHumidity();
+  tcaselect(2);
   float t7 = sht31.readTemperature();
   float h7 = sht31.readHumidity();
+
+  tt2= millis();
+  int delta = tt2-tt1;
+  
+  
+
+
   
   Serial.print("Temps  1   2:   ");
   Serial.print(t2);
@@ -99,6 +118,12 @@ void loop() {
   Serial.println(h7);
   
   Serial.println();
+  Serial.println("Delta= " + String(delta));
+  delta= ts2-ts1;
+  Serial.println("SwitchDelta= " + String(delta));
+  delta= tr2-tr1;
+  Serial.println("ReadDelta= " + String(delta));
+
    
  // Serial.print("Temp-7 *C = "); Serial.println(t7);
  // Serial.print("Hum.-7 % = "); Serial.println(h7);

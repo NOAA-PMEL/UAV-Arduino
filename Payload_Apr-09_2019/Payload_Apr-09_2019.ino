@@ -4,6 +4,10 @@
 #include <SparkFunDS1307RTC.h>  // for RTC clock
 #include <Wire.h>               // I2C for RTC
 #include <SoftwareSerial.h>
+#include <Adafruit_SHT31.h>
+
+
+
 
 SoftwareSerial SoftSerial(10, 9); // RX, TX
 // 
@@ -14,6 +18,9 @@ SoftwareSerial SoftSerial(10, 9); // RX, TX
 // Serial3 is to POPS
 // SoftSerial is to the HC2 temp, rh sensor
 
+//This version also includes two T-RH sensors on an I2C multiplexer
+#define TCAADDR 0x70
+Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
 File root;
 String DataFname;
@@ -79,6 +86,28 @@ void setup() {
   } else {
     Serial.println("SD failed...........");
   }
+ 
+ tcaselect(1);
+ Serial.println("SHT31 (2) test");
+  if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
+    Serial.println("Couldn't find SHT31");
+    while (1) delay(1);
+  }
+
+  tcaselect(2);
+  Serial.println("SHT31 (7) test");
+  if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
+    Serial.println("Couldn't find SHT31");
+    while (1) delay(1);
+  }
+}
+
+void tcaselect(uint8_t i) {
+  if (i > 7) return;
+ 
+  Wire.beginTransmission(TCAADDR);
+  Wire.write(1 << i);
+  Wire.endTransmission();  
 }
 
 
@@ -98,6 +127,10 @@ void loop() {
   static bool StatusTime=false;
   static bool POPSTime=false;
   static bool HC2Time=false;
+  static bool PSAP_T_time=false;
+  static bool PSAP_RH_time=false;
+  static bool POPS_T_time=false;
+  static bool POPS_RH_time=false;
  
 // Aerosol Payload on Serial2 is now read inside of serialEvent2()
   
@@ -116,6 +149,10 @@ void loop() {
     StatusTime=true;
     POPSTime=true;
     HC2Time=true;
+    PSAP_T_time=true;
+    PSAP_RH_time=true;
+    POPS_T_time=true;
+    POPS_RH_time=true;
     
     // change LED on output 13
     if (ledState == LOW) {
@@ -218,6 +255,44 @@ if ( HC2Time && (CT - LastCT) > 325) {
     CycleData += LastPOPS;
     LastPOPS=""; 
    }
+   
+   if ( PSAP_T_time && (CT - LastCT) > 700){
+    PSAP_T_time=false;
+    tcaselect(1);
+    float PSAP_t= sht31.readTemperature();
+    String sPSAP_t= String(PSAP_t);
+    Serial.println("PSAP-T= " + sPSAP_t);
+    }
+
+   if ( PSAP_RH_time && (CT - LastCT) > 760){
+    PSAP_RH_time=false;
+    tcaselect(1);
+    float PSAP_rh= sht31.readHumidity();
+    String sPSAP_rh= String(PSAP_rh);
+    Serial.println("PSAP-RH= " + sPSAP_rh);
+    }
+
+
+   if ( POPS_RH_time && (CT - LastCT) > 820){
+    POPS_RH_time=false;
+    tcaselect(2);
+    float POPS_t= sht31.readTemperature();
+    String sPOPS_t= String(POPS_t);
+    Serial.println("POPS-T= " + sPOPS_t);
+    }
+
+
+   if ( POPS_RH_time && (CT - LastCT) > 880){
+    POPS_RH_time=false;
+    tcaselect(2);
+    float POPS_rh= sht31.readHumidity();
+    String sPOPS_rh= String(POPS_rh);
+    Serial.println("POPS-RH= " + sPOPS_rh);
+    }
+
+
+
+
 
 
 
