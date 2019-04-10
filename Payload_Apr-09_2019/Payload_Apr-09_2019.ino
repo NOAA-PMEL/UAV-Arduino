@@ -5,9 +5,7 @@
 #include <Wire.h>               // I2C for RTC
 #include <SoftwareSerial.h>
 #include <Adafruit_SHT31.h>
-
-
-
+ 
 
 SoftwareSerial SoftSerial(10, 9); // RX, TX
 // 
@@ -65,6 +63,10 @@ void setup() {
  CycleData.reserve(600);
  LastPOPS.reserve(120);
 
+  pinMode(A2, OUTPUT);     
+  digitalWrite(A2, HIGH);   // I2C socket power on
+
+
  pinMode(ledPin, OUTPUT);
  
  rtc.begin(); // Call rtc.begin() to initialize the library
@@ -90,16 +92,21 @@ void setup() {
 
  if (I2C_T_RH) {
    tcaselect(1);
-   Serial.println("SHT31 (2) test");
+   Serial.println("SHT31 (1) test");
     if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
       Serial.println("Couldn't find SHT31");
-      while (1) delay(1);
+      //while (1) delay(1);
     }
+      float testT= sht31.readTemperature();
+      Serial.print("testT (again) ");
+      Serial.println(testT);
+      //delay(2000);
+ 
     tcaselect(2);
-    Serial.println("SHT31 (7) test");
+    Serial.println("SHT31 (2) test");
     if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
       Serial.println("Couldn't find SHT31");
-      while (1) delay(1);
+     // while (1) delay(1);
     }
  }
 
@@ -107,7 +114,8 @@ void setup() {
 
 void tcaselect(uint8_t i) {
   if (i > 7) return;
- 
+//  Serial.print("Select ");
+//  Serial.println(i);
   Wire.beginTransmission(TCAADDR);
   Wire.write(1 << i);
   Wire.endTransmission();  
@@ -134,6 +142,10 @@ void loop() {
   static bool PSAP_RH_time=false;
   static bool POPS_T_time=false;
   static bool POPS_RH_time=false;
+  //static float PSAP_t;
+  //static float PSAP_rh;
+  //static float POPS_t;
+  //static float POPS_rh;
  
 // Aerosol Payload on Serial2 is now read inside of serialEvent2()
   
@@ -146,7 +158,25 @@ void loop() {
   rtc.update(); 
 
   if (rtc.second() != lastSecond) // If the second has changed
-  {
+  { 
+//      uint8_t ch=1;
+//      tcaselect(1);
+//      float testT= sht31.readTemperature();
+//      Serial.print("testT (again) ");
+//      Serial.println(testT);
+//      float testRH= sht31.readHumidity();
+//      Serial.print("testRH (again) ");
+//      Serial.println(testRH);
+//
+//      ch = 2;
+//      tcaselect(ch);
+//      testT= sht31.readTemperature();
+//      Serial.print("testT (again) ");
+//      Serial.println(testT);
+//      testRH= sht31.readHumidity();
+//      Serial.print("testRH (again) ");
+//      Serial.println(testRH);
+     
     LastCT=CT;
     PollTime=true;
     StatusTime=true;
@@ -172,7 +202,7 @@ void loop() {
     long m = rtc.minute();
     long h = rtc.hour();
     long RTCsecs= s + 60*m + 3600*h;
-    
+
     Serial.print("RTCsecs= ");
     Serial.println(RTCsecs);    
     //Serial.print("CT= ");
@@ -186,7 +216,6 @@ void loop() {
     B2=0;
     B3=0;
     B4=0;
-    
 
     if (s == 0) {  // New Miniute: add file name and size to data record
       CycleData+= "File=" + DataFname + "\r\n";
@@ -214,7 +243,7 @@ void loop() {
     DataCard+= CycleData;    //  for the one minute SD card write
     CycleData="";   
     lastSecond = s; // Update lastSecond value
-    
+   
     //if (m != lastMinute)   // If the minute has changed, write to SD card
     if ((s % 2) == 0 )    //now every even second
     {
@@ -234,6 +263,7 @@ void loop() {
     Poll.concat("\r\n");
     Serial2.print(Poll);
   }
+
   // the following was 600, now is 250
   if( StatusTime && (CT - LastCT) > 250) {
 
@@ -251,39 +281,51 @@ if ( HC2Time && (CT - LastCT) > 325) {
   HC2Time= false;
   
 }
+  
+ if( POPSTime && (CT - LastCT) > 500) {
+  POPSTime=false;
+  CycleData += LastPOPS;
+  LastPOPS=""; 
+ }
 
+//   tcaselect(1);
 
    if (I2C_T_RH) {
-
-     if( POPSTime && (CT - LastCT) > 500) {
-      POPSTime=false;
-      CycleData += LastPOPS;
-      LastPOPS=""; 
-     }
+ 
+    
      
      if ( PSAP_T_time && (CT - LastCT) > 700){
       PSAP_T_time=false;
       tcaselect(1);
       float PSAP_t= sht31.readTemperature();
-      String sPSAP_t= String(PSAP_t);
-      Serial.println("PSAP-T= " + sPSAP_t);
+      //Serial.print( "PSAP-T=" + String(PSAP_t) + "\r\n");
+      CycleData += "PSAP-T=" + String(PSAP_t) + "\r\n";
+      //Serial.print("PSAP-T (again) ");
+      //Serial.println(PSAP_t);
+      //String sPSAP_t= String(PSAP_t);
+      //Serial.println("PSAP-T= " + sPSAP_t);
       }
   
      if ( PSAP_RH_time && (CT - LastCT) > 760){
       PSAP_RH_time=false;
       tcaselect(1);
       float PSAP_rh= sht31.readHumidity();
-      String sPSAP_rh= String(PSAP_rh);
-      Serial.println("PSAP-RH= " + sPSAP_rh);
+      //Serial.print( "PSAP-RH=" + String(PSAP_rh) +"\r\n");
+      CycleData += "PSAP-RH=" + String(PSAP_rh) +"\r\n";
+      
+      //String sPSAP_rh= String(PSAP_rh);
+      //Serial.println("PSAP-RH= " + sPSAP_rh);
       }
   
   
-     if ( POPS_RH_time && (CT - LastCT) > 820){
-      POPS_RH_time=false;
+     if ( POPS_T_time && (CT - LastCT) > 820){
+      POPS_T_time=false;
       tcaselect(2);
       float POPS_t= sht31.readTemperature();
-      String sPOPS_t= String(POPS_t);
-      Serial.println("POPS-T= " + sPOPS_t);
+      //Serial.print( "POPS-T=" + String(POPS_t) +"\r\n");
+      CycleData +=  "POPS-T=" + String(POPS_t) +"\r\n";
+      //String sPOPS_t= String(POPS_t);
+      //Serial.println("POPS-T= " + sPOPS_t);
       }
   
   
@@ -291,12 +333,16 @@ if ( HC2Time && (CT - LastCT) > 325) {
       POPS_RH_time=false;
       tcaselect(2);
       float POPS_rh= sht31.readHumidity();
-      String sPOPS_rh= String(POPS_rh);
-      Serial.println("POPS-RH= " + sPOPS_rh);
+      //Serial.print( "POPS-RH=" + String(POPS_rh) +"\r\n");
+      CycleData += "POPS-RH=" + String(POPS_rh) +"\r\n";
+//      String sPOPS_rh= String(POPS_rh);
+//      Serial.println("POPS-RH= " + sPOPS_rh);
+//      String I2C_data = "PSAP-T=" + String(PSAP_t) + " PSAP-RH=" + String(PSAP_rh);
+//      I2C_data += " POPS-T=" + String(POPS_t) + " POPS-RH=" +String(POPS_rh) + "\r\n";
+//      Serial.print(I2C_data); 
       }
 
    }
-
 
 
 
