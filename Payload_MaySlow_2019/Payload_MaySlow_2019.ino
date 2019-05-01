@@ -53,8 +53,8 @@ bool I2C_T_RH=true;  // set this to false to turn off I2C T-RH
 void setup() {
  Serial.begin(9600);
  Serial.println("<Arduino is ready>");
- Serial1.begin(38400);   // to laptop
- //Serial1.begin(19200);   // to laptop
+ //Serial1.begin(38400);   // to laptop
+ Serial1.begin(19200);   // to laptop
  Serial2.begin(38400);   // to payload
  Serial3.begin(9600);    // POPS
  SoftSerial.begin(19200); // HC2 t,rh probe
@@ -143,6 +143,8 @@ void loop() {
   static bool PSAP_RH_time=false;
   static bool POPS_T_time=false;
   static bool POPS_RH_time=false;
+  static int ss;
+  
   //static float PSAP_t;
   //static float PSAP_rh;
   //static float POPS_t;
@@ -203,6 +205,7 @@ void loop() {
     long m = rtc.minute();
     long h = rtc.hour();
     long RTCsecs= s + 60*m + 3600*h;
+    ss = s;
 
     Serial.print("RTCsecs= ");
     Serial.println(RTCsecs);    
@@ -260,7 +263,9 @@ void loop() {
   if( PollTime && (CT - LastCT) > 50) {
     // Now Poll 
     PollTime=false;
-    Poll= "Sample";
+    if (ss % 10 != 0) {      //Poll 9 out of 10 seconds for sample commad
+      Poll= "Sample";
+    }
     Poll.concat("\r\n");
     Serial2.print(Poll);
   }
@@ -270,7 +275,9 @@ void loop() {
 
   // Now Poll for Status 
   StatusTime=false;
-  Poll= "Status";
+  if (ss % 10 == 0) {    //Poll only every 10 seconds
+    Poll= "Status";
+  }
   Poll.concat("\r\n");
   Serial2.print(Poll);
   }  
@@ -291,61 +298,62 @@ if ( HC2Time && (CT - LastCT) > 325) {
 
 //   tcaselect(1);
 
-   if (I2C_T_RH) {
- 
-    
-     
-     if ( PSAP_T_time && (CT - LastCT) > 700){
-      PSAP_T_time=false;
-      tcaselect(1);
-      float PSAP_t= sht31.readTemperature();
-      //Serial.print( "PSAP-T=" + String(PSAP_t) + "\r\n");
-      CycleData += "PSAP-T=" + String(PSAP_t) + "\r\n";
-      //Serial.print("PSAP-T (again) ");
-      //Serial.println(PSAP_t);
-      //String sPSAP_t= String(PSAP_t);
-      //Serial.println("PSAP-T= " + sPSAP_t);
-      }
-  
-     if ( PSAP_RH_time && (CT - LastCT) > 760){
-      PSAP_RH_time=false;
-      tcaselect(1);
-      float PSAP_rh= sht31.readHumidity();
-      //Serial.print( "PSAP-RH=" + String(PSAP_rh) +"\r\n");
-      CycleData += "PSAP-RH=" + String(PSAP_rh) +"\r\n";
+  if ((ss+1) % 5 == 0) {  // poll I2C T and RH sensors every 5 seconds
+     if (I2C_T_RH) {
+   
       
-      //String sPSAP_rh= String(PSAP_rh);
-      //Serial.println("PSAP-RH= " + sPSAP_rh);
-      }
+       
+       if ( PSAP_T_time && (CT - LastCT) > 700){
+        PSAP_T_time=false;
+        tcaselect(1);
+        float PSAP_t= sht31.readTemperature();
+        //Serial.print( "PSAP-T=" + String(PSAP_t) + "\r\n");
+        CycleData += "PSAP-T=" + String(PSAP_t) + "\r\n";
+        //Serial.print("PSAP-T (again) ");
+        //Serial.println(PSAP_t);
+        //String sPSAP_t= String(PSAP_t);
+        //Serial.println("PSAP-T= " + sPSAP_t);
+        }
+    
+       if ( PSAP_RH_time && (CT - LastCT) > 760){
+        PSAP_RH_time=false;
+        tcaselect(1);
+        float PSAP_rh= sht31.readHumidity();
+        //Serial.print( "PSAP-RH=" + String(PSAP_rh) +"\r\n");
+        CycleData += "PSAP-RH=" + String(PSAP_rh) +"\r\n";
+        
+        //String sPSAP_rh= String(PSAP_rh);
+        //Serial.println("PSAP-RH= " + sPSAP_rh);
+        }
+    
+    
+       if ( POPS_T_time && (CT - LastCT) > 820){
+        POPS_T_time=false;
+        tcaselect(2);
+        float POPS_t= sht31.readTemperature();
+        //Serial.print( "POPS-T=" + String(POPS_t) +"\r\n");
+        CycleData +=  "POPS-T=" + String(POPS_t) +"\r\n";
+        //String sPOPS_t= String(POPS_t);
+        //Serial.println("POPS-T= " + sPOPS_t);
+        }
+    
+    
+       if ( POPS_RH_time && (CT - LastCT) > 880){
+        POPS_RH_time=false;
+        tcaselect(2);
+        float POPS_rh= sht31.readHumidity();
+        //Serial.print( "POPS-RH=" + String(POPS_rh) +"\r\n");
+        CycleData += "POPS-RH=" + String(POPS_rh) +"\r\n";
+  //      String sPOPS_rh= String(POPS_rh);
+  //      Serial.println("POPS-RH= " + sPOPS_rh);
+  //      String I2C_data = "PSAP-T=" + String(PSAP_t) + " PSAP-RH=" + String(PSAP_rh);
+  //      I2C_data += " POPS-T=" + String(POPS_t) + " POPS-RH=" +String(POPS_rh) + "\r\n";
+  //      Serial.print(I2C_data); 
+        }
   
-  
-     if ( POPS_T_time && (CT - LastCT) > 820){
-      POPS_T_time=false;
-      tcaselect(2);
-      float POPS_t= sht31.readTemperature();
-      //Serial.print( "POPS-T=" + String(POPS_t) +"\r\n");
-      CycleData +=  "POPS-T=" + String(POPS_t) +"\r\n";
-      //String sPOPS_t= String(POPS_t);
-      //Serial.println("POPS-T= " + sPOPS_t);
-      }
-  
-  
-     if ( POPS_RH_time && (CT - LastCT) > 880){
-      POPS_RH_time=false;
-      tcaselect(2);
-      float POPS_rh= sht31.readHumidity();
-      //Serial.print( "POPS-RH=" + String(POPS_rh) +"\r\n");
-      CycleData += "POPS-RH=" + String(POPS_rh) +"\r\n";
-//      String sPOPS_rh= String(POPS_rh);
-//      Serial.println("POPS-RH= " + sPOPS_rh);
-//      String I2C_data = "PSAP-T=" + String(PSAP_t) + " PSAP-RH=" + String(PSAP_rh);
-//      I2C_data += " POPS-T=" + String(POPS_t) + " POPS-RH=" +String(POPS_rh) + "\r\n";
-//      Serial.print(I2C_data); 
-      }
+     }
 
-   }
-
-
+ }    //end of 5sec if statement
 
 
 }    // This is the end of the "main" loop
