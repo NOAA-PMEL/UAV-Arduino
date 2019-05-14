@@ -144,7 +144,8 @@ void loop() {
   static long LastRemain=300;
   long Delta;
   String strA="";
-  static int8_t lastSecond = -1;
+  //static int8_t lastSecond = -1;
+  static int8_t lastSecond;
   static int8_t lastMinute = -1;
   static String DataCard="";
   String Poll="";
@@ -168,12 +169,12 @@ void loop() {
   //ReadSer3();   Now reading the POPS with Serial Event
   ReadSoftSer();
    
-  // check clocks
   CT=millis();
-  CTdelta= CT-LastCT;
+  //CTdelta= CT-LastCT;
   rtc.update(); 
-
-  if (rtc.second() != lastSecond) // If the second has changed
+  s = rtc.second();
+  
+  if (s != lastSecond) // If the second has changed
   { 
 //      uint8_t ch=1;
 //      tcaselect(1);
@@ -192,8 +193,16 @@ void loop() {
 //      testRH= sht31.readHumidity();
 //      Serial.print("testRH (again) ");
 //      Serial.println(testRH);
-     
+
+//    Serial.print("NewSec: ");
+//    Serial.print(String(s) + " " + String(lastSecond));
+//    Serial.print(" " + String(CT) + " " + String(LastCT));
+//    Serial.println(" " + String(CTdelta));
+
+
+    
     LastCT=CT;
+    lastSecond = s; // Update lastSecond value
     PollTime=true;
     StatusTime=true;
     POPSTime=true;
@@ -218,7 +227,7 @@ void loop() {
     SendData+= "\r\n" + MakeRTCstring() + " ";
 
     
-    s = rtc.second();
+    //s = rtc.second();
     long m = rtc.minute();
     long h = rtc.hour();
     long RTCsecs= s + 60*m + 3600*h;
@@ -278,7 +287,7 @@ void loop() {
     
     //CycleData="";
        
-    lastSecond = s; // Update lastSecond value
+    //lastSecond = s; // Update lastSecond value
    
 //    //if (m != lastMinute)   // If the minute has changed, write to SD card
 //    if ((s % 2) == 0 )    //now every even second
@@ -299,26 +308,31 @@ void loop() {
         lastMinute= m;
      }
 
-    // this is the end of the Start new Second If statement
+  }   // this is the end of the Start new Second If statement
+ CTdelta= CT -LastCT;
 
+   
   // the following was 400, now is 50
+  
   if( PollTime && CTdelta > 50) {
-    // Now Poll 
+    // Now Poll
+    Serial.println("Polling Sample at: " + String(CTdelta));
     PollTime=false;
     Poll= "Sample";
+    //Poll= "Status";
     Poll.concat("\r\n");
     Serial2.print(Poll);
   }
 
-  // the following was 600, now is 250
-  if( StatusTime && CTdelta > 250) {
-
-  // Now Poll for Status 
-  StatusTime=false;
-  Poll= "Status";
-  Poll.concat("\r\n");
-  Serial2.print(Poll);
-  }  
+//  // the following was 600, now is 550
+//  if( StatusTime && CTdelta > 550) {
+//      // Now Poll for Status 
+//      Serial.println("Polling Sattus at: " + String(CTdelta));
+//      StatusTime=false;
+//      Poll= "Status";
+//      Poll.concat("\r\n");
+//      Serial2.print(Poll);
+//  }  
 
 if ( HC2Time && (CT - LastCT) > 325) {
   // Now poll the HydroClip2 t,rh probe
@@ -399,7 +413,7 @@ if ( HC2Time && (CT - LastCT) > 325) {
 
 
 }    // This is the end of the "main" loop
-}    //WHY IS THIS NEEDED   Now the end of mail loop???
+//}    //WHY IS THIS NEEDED   Now the end of mail loop???
 
 
   void ReadSer1() {
@@ -560,7 +574,8 @@ void serialEvent2() {
         B2= Avail;
     }
     char inChar= (char)Serial2.read();
-    if (inChar == '\r' || ii >= 159 )  {
+    //if (inChar == '\r' || ii >= 159 )  {
+    if (inChar == '\n' || ii >= 159 )  {
       buff[ii]=0;
       String PayOut= String(buff);
       PayOut.trim();
@@ -614,9 +629,10 @@ void serialEvent3(){
     if (inChar == '\n' || ii >= 159 )  {
       buff[ii]=0;
       String POPSOut= String(buff);
-      POPSOut.trim();
+      //POPSOut.trim();
       //Serial.println(POPSOut);
-      ProcessSer3(POPSOut + "\r\n");
+      //ProcessSer3(POPSOut + "\r\n");
+      ProcessSer3(POPSOut);
       ii=0;      
     } else {
       buff[ii] = inChar;
@@ -723,32 +739,34 @@ void ProcessPayL(String DataIn){
 //  CycleData+= "\r\n";
 //  //CycleData+= "\n\r";
 //  //Serial.println(DataIn);
-
- DataIn += "\r\n";
- 
-  CardData += DataIn;  //save all data to the SD card
+  Serial.println(String(CTdelta) +" " + DataIn);
+ //DataIn += "\r\n";
+ CardData += DataIn;  //save all data to the SD card
+ SendData += DataIn;
+ //Serial.println("NewLine: " + DataIn.length());
+ //Serial.println(DataIn);
   
-  if (CTdelta > 50 && CTdelta < 249) {     // This is normal 'sample' data
-     Serial.println("SAMPLE " + String(CTdelta));
-    if (s % 5 != 0) {    
-       SendData += DataIn;
-       CardData += DataIn;
-    } else {
-      //do nothing, we are not sending sample data at even 5 sec intervel
-       CardData += DataIn;
-    }
-  }
-  
-  if (CTdelta < 50 || CTdelta > 249)  {   // This is 'status' data
-    Serial.println("STATUS " + String(CTdelta));
-    if (s % 5 == 0) {
-      SendData += DataIn;   //This is the 5 sec status data
-      CardData += DataIn;
-    } else {
-      // do nothing, only send status data at 5 sec interval
-      CardData += DataIn;
-    }
-  }
+//  if (CTdelta > 50 && CTdelta < 249) {     // This is normal 'sample' data
+//     //Serial.println("SAMPLE " + String(CTdelta));
+//    if (s % 5 != 0) {    
+//       SendData += DataIn;
+//       CardData += DataIn;
+//    } else {
+//      //do nothing, we are not sending sample data at even 5 sec intervel
+//       CardData += DataIn;
+//    }
+//  }
+//  
+//  if (CTdelta < 50 || CTdelta > 249)  {   // This is 'status' data
+//    //Serial.println("STATUS " + String(CTdelta));
+//    if (s % 5 == 0) {
+//      SendData += DataIn;   //This is the 5 sec status data
+//      CardData += DataIn;
+//    } else {
+//      // do nothing, only send status data at 5 sec interval
+//      CardData += DataIn;
+//    }
+//  }
 
 }
 
