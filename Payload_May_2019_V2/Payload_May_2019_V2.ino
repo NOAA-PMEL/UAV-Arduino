@@ -328,7 +328,7 @@ void loop() {
   }
 
   // the following was 600, now is 550
-  StatusTime= false;
+  //StatusTime= false;
   if( StatusTime && CTdelta > 350) {
       // Now Poll for Status 
       Serial.println("Polling Sattus at: " + String(CTdelta));
@@ -594,32 +594,6 @@ void serialEvent2() {
 }
 
 
-
-// //POPS
-//void serialEvent3() {
-//  //Serial.println("In the Event");
-//  POPSbytes=Serial3.available();
-//  //Disp="Bytes= " + String(PayBytes);
-//  //Serial.println(Disp);
-//  while (Serial3.available()) {
-// 
-//    char inChar = (char)Serial3.read();
-//    // add it to the inputString:
-//    inputStringPOPS += inChar;
-//    // if the incoming character is a newline, set a flag so the main loop can
-//    // do something about it:
-//    if (inChar == '\n') {
-//      inputStringPOPS.trim();
-//      //ProcessPayL(inputString);
-//      ProcessSer3(inputStringPOPS + "\r\n");
-//      inputStringPOPS="";
-//      //stringComplete = true;
-//    }
-//  }
-//}
-////
-
-
 //POPS
 void serialEvent3(){
   static uint8_t ii=0;
@@ -740,39 +714,28 @@ void DoStuff() {
 }
 
 void ProcessPayL(String DataIn){
-//  CycleData+= DataIn;
-//  CycleData+= "\r\n";
-//  //CycleData+= "\n\r";
-//  //Serial.println(DataIn);
-  Serial.println(String(CTdelta) +" " + DataIn);
- DataIn += "\r\n";
- CardData += DataIn;  //save all data to the SD card
- SendData += DataIn;
- //Serial.println("NewLine: " + DataIn.length());
- //Serial.println(DataIn);
-  
-//  if (CTdelta > 50 && CTdelta < 249) {     // This is normal 'sample' data
-//     //Serial.println("SAMPLE " + String(CTdelta));
-//    if (s % 5 != 0) {    
-//       SendData += DataIn;
-//       CardData += DataIn;
-//    } else {
-//      //do nothing, we are not sending sample data at even 5 sec intervel
-//       CardData += DataIn;
-//    }
-//  }
-//  
-//  if (CTdelta < 50 || CTdelta > 249)  {   // This is 'status' data
-//    //Serial.println("STATUS " + String(CTdelta));
-//    if (s % 5 == 0) {
-//      SendData += DataIn;   //This is the 5 sec status data
-//      CardData += DataIn;
-//    } else {
-//      // do nothing, only send status data at 5 sec interval
-//      CardData += DataIn;
-//    }
-//  }
+    Serial.println(String(CTdelta) +" " + DataIn);
+   DataIn += "\r\n";
+   CardData += DataIn;  //save all data to the SD card
+   //SendData += DataIn;
 
+  if (CTdelta > 350 && CTdelta < 450) {      // This is 'Status' data
+     if (s % 5 == 0) {
+      //Send only Status data at even 5 sec intervals
+      SendData += DataIn;
+     } else {
+      // Do not send Status Data
+     }
+    
+  }  else {
+    // This is Sample Data, Send Sample data, execpt at even 5 sec intervals
+    if (s % 5 == 0) {
+      // Do not send 'Sample' Data    
+    }  else  {
+      //Send the 'Sample' Data
+      SendData += DataIn;
+    }
+  }
 }
 
 String MakeTimeStr(long SecsIn) {
