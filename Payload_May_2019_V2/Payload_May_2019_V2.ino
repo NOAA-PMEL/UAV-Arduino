@@ -314,7 +314,7 @@ void loop() {
    
   // the following was 400, now is 50
   
-  if( PollTime && CTdelta > 50) {
+  if( PollTime && CTdelta > 150) {
     // Now Poll
     Serial.println("Polling Sample at: " + String(CTdelta));
     PollTime=false;
@@ -578,7 +578,8 @@ void serialEvent2() {
     if (inChar == '\n' || ii >= 159 )  {
       buff[ii]=0;
       String PayOut= String(buff);
-      PayOut.trim();
+      //PayOut.trim();
+      Serial.print("InReader2: " + PayOut);
       ProcessPayL(PayOut);
       ii=0;      
     } else {
