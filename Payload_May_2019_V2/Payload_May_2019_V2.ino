@@ -33,11 +33,17 @@ char receivedChars[numChars]; // an array to store the received data
 boolean newData = false;
 long CurrTimeMills;
 float CurrTimeSecs;
+long CTdelta;
+long s;
+
 //long CTsecs;
 long NewSecs;
 String TString;
 long TimeOffset= 0;
-String CycleData = "";
+//String CycleData = "";
+String CardData="";
+String SendData="";
+
 String inputString = "";
 String inputStringPOPS="";
 String LastPOPS="";
@@ -50,18 +56,24 @@ int B3=0;
 int B4=0;
 bool I2C_T_RH=true;  // set this to false to turn off I2C T-RH
 
+
+
+
 void setup() {
- Serial.begin(9600);
+ Serial.begin(115200);
  Serial.println("<Arduino is ready>");
- Serial1.begin(38400);   // to laptop
- //Serial1.begin(19200);   // to laptop
+ //Serial1.begin(38400);   // to laptop
+ Serial1.begin(19200);   // to laptop
  Serial2.begin(38400);   // to payload
  Serial3.begin(9600);    // POPS
  SoftSerial.begin(19200); // HC2 t,rh probe
  
  //SoftSerial.begin(9600);
  inputString.reserve(200);
- CycleData.reserve(600);
+ //CycleData.reserve(600);
+ CardData.reserve(600);
+ SendData.reserve(600);
+ 
  LastPOPS.reserve(120);
 
   pinMode(A2, OUTPUT);     
@@ -85,7 +97,7 @@ void setup() {
     root = SD.open("/");
     DataFname= FindNewFileName(root);
     Serial.print(DataFname + "    ");
-    //dataFile = SD.open(DataFname, FILE_WRITE);
+    dataFile = SD.open(DataFname, FILE_WRITE);
     Serial.println("done!");
   } else {
     Serial.println("SD failed...........");
@@ -126,12 +138,15 @@ void tcaselect(uint8_t i) {
 void loop() {
   long CT;
   static long LastCT=0;
+  //static long CTdelta;
+  //static long s;  
   long Remain;
   static long LastRemain=300;
   long Delta;
   String strA="";
-  static int8_t lastSecond = -1;
-  //static int8_t lastMinute = -1;
+  //static int8_t lastSecond = -1;
+  static int8_t lastSecond;
+  static int8_t lastMinute = -1;
   static String DataCard="";
   String Poll="";
   static int alter=0;
@@ -154,11 +169,12 @@ void loop() {
   //ReadSer3();   Now reading the POPS with Serial Event
   ReadSoftSer();
    
-  // check clocks
   CT=millis();
+  //CTdelta= CT-LastCT;
   rtc.update(); 
-
-  if (rtc.second() != lastSecond) // If the second has changed
+  s = rtc.second();
+  
+  if (s != lastSecond) // If the second has changed
   { 
 //      uint8_t ch=1;
 //      tcaselect(1);
@@ -177,8 +193,16 @@ void loop() {
 //      testRH= sht31.readHumidity();
 //      Serial.print("testRH (again) ");
 //      Serial.println(testRH);
-     
+
+//    Serial.print("NewSec: ");
+//    Serial.print(String(s) + " " + String(lastSecond));
+//    Serial.print(" " + String(CT) + " " + String(LastCT));
+//    Serial.println(" " + String(CTdelta));
+
+
+    
     LastCT=CT;
+    lastSecond = s; // Update lastSecond value
     PollTime=true;
     StatusTime=true;
     POPSTime=true;
@@ -198,8 +222,12 @@ void loop() {
 
     //CycleData+= "RTC= " + MakeRTCstring() + "\r\n";
     //CycleData+= MakeRTCstring() + "\r\n";
-    CycleData+= MakeRTCstring() + " ";
-    long s = rtc.second();
+    //CycleData+= MakeRTCstring() + " ";
+    CardData+= "\r\n" +  MakeRTCstring() + " ";
+    SendData+= "\r\n" + MakeRTCstring() + " ";
+
+    
+    //s = rtc.second();
     long m = rtc.minute();
     long h = rtc.hour();
     long RTCsecs= s + 60*m + 3600*h;
@@ -213,19 +241,28 @@ void loop() {
     float diff= CTsecs + TimeOffset; 
     diff =diff - (float)RTCsecs;
     
-    CycleData += "B2=" + String(B2) + " B3=" + String(B3) + " B4=" + String(B4) + "\r\n";
+    String Buffers= "B2=" + String(B2) + " B3=" + String(B3) + " B4=" + String(B4) + "\r\n";
+    CardData += Buffers;
+    SendData += Buffers;
+    
     B2=0;
     B3=0;
     B4=0;
 
     if (s == 0) {  // New Miniute: add file name and size to data record
-      CycleData+= "File=" + DataFname + "\r\n";
+      //CycleData+= "File=" + DataFname + "\r\n";
+      CardData+= "File=" + DataFname + "\r\n";
+      SendData+= "File=" + DataFname + "\r\n";
+      
       Serial.print("File=" + DataFname + "\r\n");
-      dataFile = SD.open(DataFname, FILE_READ);
+      //dataFile = SD.open(DataFname, FILE_READ);
       unsigned long Fsize= dataFile.size();
-      CycleData+= "Fsize=" + String(Fsize) + "\r\n";
+      //CycleData+= "Fsize=" + String(Fsize) + "\r\n";
+      CardData+= "Fsize=" + String(Fsize) + "\r\n";
+      SendData+= "Fsize=" + String(Fsize) + "\r\n";
+      
       Serial.print("Fsize=" + String(Fsize) + "\r\n");
-      dataFile.close();
+      //dataFile.close();
       char charD[4];     // Now add Date Stamp
       String Dstring="";
       sprintf(charD,"%4d-", (rtc.year()+2000));
@@ -234,48 +271,74 @@ void loop() {
       Dstring+= String(charD);
       sprintf(charD,"%02d", rtc.date());
       Dstring+= String(charD);
-      CycleData+= "Date=" + Dstring + "\r\n";
+      //CycleData+= "Date=" + Dstring + "\r\n";
+      CardData+= "Date=" + Dstring + "\r\n";
+      SendData+= "Date=" + Dstring + "\r\n";
+
+      
       Serial.print("Date=" + Dstring + "\r\n");       
     }
     
     //CycleData+= "Delta Time (secs) = " + String(diff,4) + "\r\n"; 
-    Serial1.print(CycleData);
+    //Serial1.print(CycleData);
     //Serial.print(CycleData);
-    DataCard+= CycleData;    //  for the one minute SD card write
-    CycleData="";   
-    lastSecond = s; // Update lastSecond value
-   
-    //if (m != lastMinute)   // If the minute has changed, write to SD card
-    if ((s % 2) == 0 )    //now every even second
-    {
-      dataFile = SD.open(DataFname, FILE_WRITE);
-      dataFile.print(DataCard);
-      dataFile.close();
-      //lastMinute= m;
-      DataCard="";    
-    }
-  }   // this is the end of the Start new Second If statement
+    //DataCard+= CycleData;    //  for the one minute SD card write
 
+    //Now Send data on Serial1
+    Serial1.print(SendData);
+    SendData="";
+    
+    //CycleData="";
+       
+    //lastSecond = s; // Update lastSecond value
+   
+//    //if (m != lastMinute)   // If the minute has changed, write to SD card
+//    if ((s % 2) == 0 )    //now every even second
+//    {
+//      dataFile = SD.open(DataFname, FILE_WRITE);
+//      dataFile.print(DataCard);
+//      dataFile.close();
+//      //lastMinute= m;
+//      DataCard="";    
+//    }
+
+    //Now Print to Data Card
+    //CycleData="";    // remove this when finished
+     dataFile.print(CardData);
+     CardData="";
+     if (m != lastMinute)  {   // If the minute has changed, flush the SD card
+        dataFile.flush();
+        lastMinute= m;
+     }
+
+  }   // this is the end of the Start new Second If statement
+ CTdelta= CT -LastCT;
+
+   
   // the following was 400, now is 50
-  if( PollTime && (CT - LastCT) > 50) {
-    // Now Poll 
+  
+  if( PollTime && CTdelta > 50) {
+    // Now Poll
+    Serial.println("Polling Sample at: " + String(CTdelta));
     PollTime=false;
     Poll= "Sample";
+    //Poll= "Status";
     Poll.concat("\r\n");
     Serial2.print(Poll);
   }
 
-  // the following was 600, now is 250
-  if( StatusTime && (CT - LastCT) > 250) {
-
-  // Now Poll for Status 
-  StatusTime=false;
-  Poll= "Status";
-  Poll.concat("\r\n");
-  Serial2.print(Poll);
+  // the following was 600, now is 550
+  //StatusTime= false;
+  if( StatusTime && CTdelta > 350) {
+      // Now Poll for Status 
+      Serial.println("Polling Sattus at: " + String(CTdelta));
+      StatusTime=false;
+      Poll= "Status";
+      Poll.concat("\r\n");
+      Serial2.print(Poll);
   }  
 
-if ( HC2Time && (CT - LastCT) > 325) {
+if ( HC2Time && (CT - LastCT) > 450) {
   // Now poll the HydroClip2 t,rh probe
   String PollHC2 = "{ 99RDD}\r";
   SoftSerial.print(PollHC2);
@@ -283,9 +346,14 @@ if ( HC2Time && (CT - LastCT) > 325) {
   
 }
   
- if( POPSTime && (CT - LastCT) > 500) {
+ if( POPSTime && CTdelta > 550) {
   POPSTime=false;
-  CycleData += LastPOPS;
+  //CycleData += LastPOPS;
+  CardData += LastPOPS;
+  if (s % 2 == 0) {          // only send every other POPS line
+    SendData += LastPOPS;
+  }
+  
   LastPOPS=""; 
  }
 
@@ -295,12 +363,19 @@ if ( HC2Time && (CT - LastCT) > 325) {
  
     
      
-     if ( PSAP_T_time && (CT - LastCT) > 700){
+     if ( PSAP_T_time && CTdelta > 700){
       PSAP_T_time=false;
       tcaselect(1);
       float PSAP_t= sht31.readTemperature();
       //Serial.print( "PSAP-T=" + String(PSAP_t) + "\r\n");
-      CycleData += "PSAP-T=" + String(PSAP_t) + "\r\n";
+      //CycleData += "PSAP-T=" + String(PSAP_t) + "\r\n";
+      String i2c =  "PSAP-T=" + String(PSAP_t) + "\r\n";
+      if ((s+3) % 5 == 0) {
+        CardData += i2c;
+        SendData += i2c;  
+      } else {
+        CardData += i2c;
+      }      
       //Serial.print("PSAP-T (again) ");
       //Serial.println(PSAP_t);
       //String sPSAP_t= String(PSAP_t);
@@ -312,8 +387,14 @@ if ( HC2Time && (CT - LastCT) > 325) {
       tcaselect(1);
       float PSAP_rh= sht31.readHumidity();
       //Serial.print( "PSAP-RH=" + String(PSAP_rh) +"\r\n");
-      CycleData += "PSAP-RH=" + String(PSAP_rh) +"\r\n";
-      
+      //CycleData += "PSAP-RH=" + String(PSAP_rh) +"\r\n";
+      String i2c= "PSAP-RH=" + String(PSAP_rh) +"\r\n";
+      if ((s+3) % 5 == 0) {
+        CardData += i2c;
+        SendData += i2c;  
+      } else {
+        CardData += i2c;
+      }
       //String sPSAP_rh= String(PSAP_rh);
       //Serial.println("PSAP-RH= " + sPSAP_rh);
       }
@@ -324,7 +405,16 @@ if ( HC2Time && (CT - LastCT) > 325) {
       tcaselect(2);
       float POPS_t= sht31.readTemperature();
       //Serial.print( "POPS-T=" + String(POPS_t) +"\r\n");
-      CycleData +=  "POPS-T=" + String(POPS_t) +"\r\n";
+      //CycleData +=  "POPS-T=" + String(POPS_t) +"\r\n";
+      String i2c =  "POPS-T=" + String(POPS_t) +"\r\n";
+        if ((s+2) % 5 == 0) {
+          CardData += i2c;
+          SendData += i2c;  
+        } else {
+          CardData += i2c;
+        }
+      
+      
       //String sPOPS_t= String(POPS_t);
       //Serial.println("POPS-T= " + sPOPS_t);
       }
@@ -335,12 +425,15 @@ if ( HC2Time && (CT - LastCT) > 325) {
       tcaselect(2);
       float POPS_rh= sht31.readHumidity();
       //Serial.print( "POPS-RH=" + String(POPS_rh) +"\r\n");
-      CycleData += "POPS-RH=" + String(POPS_rh) +"\r\n";
-//      String sPOPS_rh= String(POPS_rh);
-//      Serial.println("POPS-RH= " + sPOPS_rh);
-//      String I2C_data = "PSAP-T=" + String(PSAP_t) + " PSAP-RH=" + String(PSAP_rh);
-//      I2C_data += " POPS-T=" + String(POPS_t) + " POPS-RH=" +String(POPS_rh) + "\r\n";
-//      Serial.print(I2C_data); 
+      //CycleData += "POPS-RH=" + String(POPS_rh) +"\r\n";
+      String i2c= "POPS-RH=" + String(POPS_rh) +"\r\n";
+      if ((s+2) % 5 == 0) {
+          CardData += i2c;
+          SendData += i2c;  
+        } else {
+          CardData += i2c;
+       }
+
       }
 
    }
@@ -349,7 +442,7 @@ if ( HC2Time && (CT - LastCT) > 325) {
 
 
 }    // This is the end of the "main" loop
-
+//}    //WHY IS THIS NEEDED   Now the end of mail loop???
 
 
   void ReadSer1() {
@@ -431,10 +524,6 @@ void ReadSoftSer() {
   }
 }
 
-
-
-
-
 void ProcessHC2(String sLine) {
 //Serial.println("sLine is-> " + sLine);
 //String sParams[5];
@@ -453,7 +542,9 @@ RH.trim();
 String Outline="RH=" + RH + " " + "AT=" + AirT + "\r\n";
 Serial.print(Outline);
 
- CycleData+= Outline;
+ //CycleData+= Outline;
+ CardData+= Outline;
+ SendData+= Outline;
 
 }
 
@@ -508,10 +599,12 @@ void serialEvent2() {
         B2= Avail;
     }
     char inChar= (char)Serial2.read();
-    if (inChar == '\r' || ii >= 159 )  {
+    //if (inChar == '\r' || ii >= 159 )  {
+    if (inChar == '\n' || ii >= 159 )  {
       buff[ii]=0;
       String PayOut= String(buff);
       PayOut.trim();
+      //Serial.print("InReader2: " + PayOut);
       ProcessPayL(PayOut);
       ii=0;      
     } else {
@@ -520,32 +613,6 @@ void serialEvent2() {
     }
   }
 }
-
-
-
-// //POPS
-//void serialEvent3() {
-//  //Serial.println("In the Event");
-//  POPSbytes=Serial3.available();
-//  //Disp="Bytes= " + String(PayBytes);
-//  //Serial.println(Disp);
-//  while (Serial3.available()) {
-// 
-//    char inChar = (char)Serial3.read();
-//    // add it to the inputString:
-//    inputStringPOPS += inChar;
-//    // if the incoming character is a newline, set a flag so the main loop can
-//    // do something about it:
-//    if (inChar == '\n') {
-//      inputStringPOPS.trim();
-//      //ProcessPayL(inputString);
-//      ProcessSer3(inputStringPOPS + "\r\n");
-//      inputStringPOPS="";
-//      //stringComplete = true;
-//    }
-//  }
-//}
-////
 
 
 //POPS
@@ -562,9 +629,10 @@ void serialEvent3(){
     if (inChar == '\n' || ii >= 159 )  {
       buff[ii]=0;
       String POPSOut= String(buff);
-      POPSOut.trim();
+      //POPSOut.trim();
       //Serial.println(POPSOut);
-      ProcessSer3(POPSOut + "\r\n");
+      //ProcessSer3(POPSOut + "\r\n");
+      ProcessSer3(POPSOut);
       ii=0;      
     } else {
       buff[ii] = inChar;
@@ -667,10 +735,28 @@ void DoStuff() {
 }
 
 void ProcessPayL(String DataIn){
-  CycleData+= DataIn;
-  CycleData+= "\r\n";
-  //CycleData+= "\n\r";
-  //Serial.println(DataIn);
+   //Serial.println(String(CTdelta) +" " + DataIn);
+   DataIn += "\r\n";
+   CardData += DataIn;  //save all data to the SD card
+   //SendData += DataIn;
+
+  if (CTdelta > 350 && CTdelta < 450) {      // This is 'Status' data
+     if (s % 5 == 0) {
+      //Send only Status data at even 5 sec intervals
+      SendData += DataIn;
+     } else {
+      // Do not send Status Data
+     }
+    
+  }  else {
+    // This is Sample Data, Send Sample data, execpt at even 5 sec intervals
+    if (s % 5 == 0) {
+      // Do not send 'Sample' Data    
+    }  else  {
+      //Send the 'Sample' Data
+      SendData += DataIn;
+    }
+  }
 }
 
 String MakeTimeStr(long SecsIn) {
@@ -730,8 +816,6 @@ String MakeRTCstring() {
   return Tstring;
 }
   
-
-
 String FindNewFileName(File dir) {
   String Fname;
   String strIdx;
