@@ -60,7 +60,7 @@ bool I2C_T_RH=true;  // set this to false to turn off I2C T-RH
 
 
 void setup() {
- Serial.begin(9600);
+ Serial.begin(115200);
  Serial.println("<Arduino is ready>");
  //Serial1.begin(38400);   // to laptop
  Serial1.begin(19200);   // to laptop
@@ -241,7 +241,10 @@ void loop() {
     float diff= CTsecs + TimeOffset; 
     diff =diff - (float)RTCsecs;
     
-    CycleData += "B2=" + String(B2) + " B3=" + String(B3) + " B4=" + String(B4) + "\r\n";
+    String Buffers= "B2=" + String(B2) + " B3=" + String(B3) + " B4=" + String(B4) + "\r\n";
+    CardData += Buffers;
+    SendData += Buffers;
+    
     B2=0;
     B3=0;
     B4=0;
@@ -314,7 +317,7 @@ void loop() {
    
   // the following was 400, now is 50
   
-  if( PollTime && CTdelta > 150) {
+  if( PollTime && CTdelta > 50) {
     // Now Poll
     Serial.println("Polling Sample at: " + String(CTdelta));
     PollTime=false;
@@ -324,17 +327,18 @@ void loop() {
     Serial2.print(Poll);
   }
 
-//  // the following was 600, now is 550
-//  if( StatusTime && CTdelta > 550) {
-//      // Now Poll for Status 
-//      Serial.println("Polling Sattus at: " + String(CTdelta));
-//      StatusTime=false;
-//      Poll= "Status";
-//      Poll.concat("\r\n");
-//      Serial2.print(Poll);
-//  }  
+  // the following was 600, now is 550
+  StatusTime= false;
+  if( StatusTime && CTdelta > 350) {
+      // Now Poll for Status 
+      Serial.println("Polling Sattus at: " + String(CTdelta));
+      StatusTime=false;
+      Poll= "Status";
+      Poll.concat("\r\n");
+      Serial2.print(Poll);
+  }  
 
-if ( HC2Time && (CT - LastCT) > 325) {
+if ( HC2Time && (CT - LastCT) > 450) {
   // Now poll the HydroClip2 t,rh probe
   String PollHC2 = "{ 99RDD}\r";
   SoftSerial.print(PollHC2);
@@ -342,7 +346,7 @@ if ( HC2Time && (CT - LastCT) > 325) {
   
 }
   
- if( POPSTime && CTdelta > 500) {
+ if( POPSTime && CTdelta > 550) {
   POPSTime=false;
   //CycleData += LastPOPS;
   CardData += LastPOPS;
@@ -578,8 +582,8 @@ void serialEvent2() {
     if (inChar == '\n' || ii >= 159 )  {
       buff[ii]=0;
       String PayOut= String(buff);
-      //PayOut.trim();
-      Serial.print("InReader2: " + PayOut);
+      PayOut.trim();
+      //Serial.print("InReader2: " + PayOut);
       ProcessPayL(PayOut);
       ii=0;      
     } else {
@@ -741,7 +745,7 @@ void ProcessPayL(String DataIn){
 //  //CycleData+= "\n\r";
 //  //Serial.println(DataIn);
   Serial.println(String(CTdelta) +" " + DataIn);
- //DataIn += "\r\n";
+ DataIn += "\r\n";
  CardData += DataIn;  //save all data to the SD card
  SendData += DataIn;
  //Serial.println("NewLine: " + DataIn.length());
