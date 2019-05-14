@@ -40,7 +40,7 @@ long s;
 long NewSecs;
 String TString;
 long TimeOffset= 0;
-String CycleData = "";
+//String CycleData = "";
 String CardData="";
 String SendData="";
 
@@ -303,7 +303,7 @@ void loop() {
 //    }
 
     //Now Print to Data Card
-     CycleData="";    // remove this when finished
+    //CycleData="";    // remove this when finished
      dataFile.print(CardData);
      CardData="";
      if (m != lastMinute)  {   // If the minute has changed, flush the SD card
@@ -363,12 +363,19 @@ if ( HC2Time && (CT - LastCT) > 450) {
  
     
      
-     if ( PSAP_T_time && (CT - LastCT) > 700){
+     if ( PSAP_T_time && CTdelta > 700){
       PSAP_T_time=false;
       tcaselect(1);
       float PSAP_t= sht31.readTemperature();
       //Serial.print( "PSAP-T=" + String(PSAP_t) + "\r\n");
-      CycleData += "PSAP-T=" + String(PSAP_t) + "\r\n";
+      //CycleData += "PSAP-T=" + String(PSAP_t) + "\r\n";
+      String i2c =  "PSAP-T=" + String(PSAP_t) + "\r\n";
+      if ((s+3) % 5 == 0) {
+        CardData += i2c;
+        SendData += i2c;  
+      } else {
+        CardData += i2c;
+      }      
       //Serial.print("PSAP-T (again) ");
       //Serial.println(PSAP_t);
       //String sPSAP_t= String(PSAP_t);
@@ -380,8 +387,14 @@ if ( HC2Time && (CT - LastCT) > 450) {
       tcaselect(1);
       float PSAP_rh= sht31.readHumidity();
       //Serial.print( "PSAP-RH=" + String(PSAP_rh) +"\r\n");
-      CycleData += "PSAP-RH=" + String(PSAP_rh) +"\r\n";
-      
+      //CycleData += "PSAP-RH=" + String(PSAP_rh) +"\r\n";
+      String i2c= "PSAP-RH=" + String(PSAP_rh) +"\r\n";
+      if ((s+3) % 5 == 0) {
+        CardData += i2c;
+        SendData += i2c;  
+      } else {
+        CardData += i2c;
+      }
       //String sPSAP_rh= String(PSAP_rh);
       //Serial.println("PSAP-RH= " + sPSAP_rh);
       }
@@ -392,7 +405,16 @@ if ( HC2Time && (CT - LastCT) > 450) {
       tcaselect(2);
       float POPS_t= sht31.readTemperature();
       //Serial.print( "POPS-T=" + String(POPS_t) +"\r\n");
-      CycleData +=  "POPS-T=" + String(POPS_t) +"\r\n";
+      //CycleData +=  "POPS-T=" + String(POPS_t) +"\r\n";
+      String i2c =  "POPS-T=" + String(POPS_t) +"\r\n";
+        if ((s+2) % 5 == 0) {
+          CardData += i2c;
+          SendData += i2c;  
+        } else {
+          CardData += i2c;
+        }
+      
+      
       //String sPOPS_t= String(POPS_t);
       //Serial.println("POPS-T= " + sPOPS_t);
       }
@@ -403,12 +425,15 @@ if ( HC2Time && (CT - LastCT) > 450) {
       tcaselect(2);
       float POPS_rh= sht31.readHumidity();
       //Serial.print( "POPS-RH=" + String(POPS_rh) +"\r\n");
-      CycleData += "POPS-RH=" + String(POPS_rh) +"\r\n";
-//      String sPOPS_rh= String(POPS_rh);
-//      Serial.println("POPS-RH= " + sPOPS_rh);
-//      String I2C_data = "PSAP-T=" + String(PSAP_t) + " PSAP-RH=" + String(PSAP_rh);
-//      I2C_data += " POPS-T=" + String(POPS_t) + " POPS-RH=" +String(POPS_rh) + "\r\n";
-//      Serial.print(I2C_data); 
+      //CycleData += "POPS-RH=" + String(POPS_rh) +"\r\n";
+      String i2c= "POPS-RH=" + String(POPS_rh) +"\r\n";
+      if ((s+2) % 5 == 0) {
+          CardData += i2c;
+          SendData += i2c;  
+        } else {
+          CardData += i2c;
+       }
+
       }
 
    }
@@ -498,10 +523,6 @@ void ReadSoftSer() {
     }
   }
 }
-
-
-
-
 
 void ProcessHC2(String sLine) {
 //Serial.println("sLine is-> " + sLine);
@@ -714,7 +735,7 @@ void DoStuff() {
 }
 
 void ProcessPayL(String DataIn){
-    Serial.println(String(CTdelta) +" " + DataIn);
+   //Serial.println(String(CTdelta) +" " + DataIn);
    DataIn += "\r\n";
    CardData += DataIn;  //save all data to the SD card
    //SendData += DataIn;
